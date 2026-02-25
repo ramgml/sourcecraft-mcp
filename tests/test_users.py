@@ -325,3 +325,159 @@ class TestListUserPullRequests:
         )
 
         assert "Error listing user pull requests" in result
+
+
+class TestRegisterTools:
+    """Test register_tools function."""
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_current_user(self, mock_client, mock_context):
+        """Test that _get_current_user tool is registered and works."""
+        mcp = MagicMock()
+        tools = {}
+
+        def mock_tool():
+            def decorator(func):
+                tools[func.__name__] = func
+                return func
+
+            return decorator
+
+        mcp.tool = mock_tool
+
+        users.register_tools(mcp)
+
+        # Test _get_current_user tool
+        mock_user = MagicMock()
+        mock_user.display_name = "Test User"
+        mock_user.username = "testuser"
+        mock_user.bio = None
+        mock_user.location = None
+        mock_user.workplace = None
+        mock_user.links = []
+        mock_user.visibility = "public"
+
+        mock_client.users.get_current = AsyncMock(return_value=mock_user)
+
+        result = await tools["_get_current_user"](ctx=mock_context)
+
+        assert "Test User" in result
+        assert "@testuser" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_user(self, mock_client, mock_context):
+        """Test that _get_user tool is registered and works."""
+        mcp = MagicMock()
+        tools = {}
+
+        def mock_tool():
+            def decorator(func):
+                tools[func.__name__] = func
+                return func
+
+            return decorator
+
+        mcp.tool = mock_tool
+
+        users.register_tools(mcp)
+
+        # Test _get_user tool
+        mock_user = MagicMock()
+        mock_user.display_name = "John Doe"
+        mock_user.username = "johndoe"
+        mock_user.bio = None
+        mock_user.location = None
+        mock_user.workplace = None
+
+        mock_client.users.get = AsyncMock(return_value=mock_user)
+
+        result = await tools["_get_user"](username="johndoe", ctx=mock_context)
+
+        assert "John Doe" in result
+        assert "@johndoe" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_my_issues(self, mock_client, mock_context):
+        """Test that _list_my_issues tool is registered and works."""
+        mcp = MagicMock()
+        tools = {}
+
+        def mock_tool():
+            def decorator(func):
+                tools[func.__name__] = func
+                return func
+
+            return decorator
+
+        mcp.tool = mock_tool
+
+        users.register_tools(mcp)
+
+        # Test _list_my_issues tool
+        mock_result = MagicMock()
+        mock_result.issues = []
+
+        mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
+
+        result = await tools["_list_my_issues"](
+            page_size=30,
+            page_token="",
+            ctx=mock_context,
+        )
+
+        assert "No issues found for you" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_user_pull_requests(self, mock_client, mock_context):
+        """Test that _list_user_pull_requests tool is registered and works."""
+        mcp = MagicMock()
+        tools = {}
+
+        def mock_tool():
+            def decorator(func):
+                tools[func.__name__] = func
+                return func
+
+            return decorator
+
+        mcp.tool = mock_tool
+
+        users.register_tools(mcp)
+
+        # Test _list_user_pull_requests tool
+        mock_result = MagicMock()
+        mock_result.pull_requests = []
+
+        mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
+
+        result = await tools["_list_user_pull_requests"](
+            username="testuser",
+            role="any",
+            page_size=30,
+            page_token="",
+            ctx=mock_context,
+        )
+
+        assert "No pull requests found for @testuser" in result
+
+    def test_register_tools_registers_all_tools(self):
+        """Test that all four tools are registered."""
+        mcp = MagicMock()
+        registered_tools = []
+
+        def mock_tool():
+            def decorator(func):
+                registered_tools.append(func.__name__)
+                return func
+
+            return decorator
+
+        mcp.tool = mock_tool
+
+        users.register_tools(mcp)
+
+        assert "_get_current_user" in registered_tools
+        assert "_get_user" in registered_tools
+        assert "_list_my_issues" in registered_tools
+        assert "_list_user_pull_requests" in registered_tools
+        assert len(registered_tools) == 4
