@@ -644,3 +644,333 @@ class TestAddIssueComment:
         )
 
         assert "Error adding comment" in result
+
+
+class TestRegisterTools:
+    """Test register_tools function."""
+
+    def test_register_tools_registers_all_tools(self):
+        """Test that all tools are registered."""
+        mock_mcp = MagicMock()
+        tool_count = []
+
+        def capture_tool(func):
+            tool_count.append(func.__name__)
+            return func
+
+        mock_mcp.tool = MagicMock(return_value=capture_tool)
+        issues.register_tools(mock_mcp)
+
+        assert mock_mcp.tool.call_count == 8
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_issues(self):
+        """Test that register_tools registers list_issues."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        list_func = None
+        for name, func in tool_calls:
+            if name == "_list_issues":
+                list_func = func
+                break
+
+        assert list_func is not None
+
+        mock_issue = MagicMock()
+        mock_issue.slug = "123"
+        mock_issue.title = "Test Issue"
+        mock_issue.status = MagicMock(slug="open", name="Open")
+        mock_issue.priority = "normal"
+        mock_issue.assignee = None
+
+        mock_result = MagicMock()
+        mock_result.data = [mock_issue]
+        mock_client.issues.list = AsyncMock(return_value=mock_result)
+
+        result = await list_func("test", "test-repo", ctx=mock_context)
+        assert "Test Issue" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_issue(self):
+        """Test that register_tools registers get_issue."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        get_func = None
+        for name, func in tool_calls:
+            if name == "_get_issue":
+                get_func = func
+                break
+
+        assert get_func is not None
+
+        mock_issue = MagicMock()
+        mock_issue.slug = "123"
+        mock_issue.title = "Test Issue"
+        mock_issue.description = "Description"
+        mock_issue.status = MagicMock(slug="open", name="Open")
+        mock_issue.priority = "normal"
+        mock_issue.author = MagicMock(slug="author")
+        mock_issue.assignee = None
+        mock_issue.labels = []
+        mock_issue.milestone = None
+        mock_issue.deadline = None
+        mock_issue.linked_prs = []
+        mock_issue.created_at = "2024-01-01"
+        mock_issue.updated_at = "2024-01-01"
+
+        mock_client.issues.get = AsyncMock(return_value=mock_issue)
+
+        result = await get_func("test", "test-repo", 123, ctx=mock_context)
+        assert "Test Issue" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_create_issue(self):
+        """Test that register_tools registers create_issue."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        create_func = None
+        for name, func in tool_calls:
+            if name == "_create_issue":
+                create_func = func
+                break
+
+        assert create_func is not None
+
+        mock_issue = MagicMock()
+        mock_issue.slug = "456"
+        mock_issue.title = "New Issue"
+        mock_issue.status = MagicMock(name="Open")
+        mock_issue.priority = "normal"
+
+        mock_client.issues.create = AsyncMock(return_value=mock_issue)
+
+        result = await create_func("test", "test-repo", "New Issue", ctx=mock_context)
+        assert "Issue created successfully" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_update_issue(self):
+        """Test that register_tools registers update_issue."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        update_func = None
+        for name, func in tool_calls:
+            if name == "_update_issue":
+                update_func = func
+                break
+
+        assert update_func is not None
+
+        mock_issue = MagicMock()
+        mock_issue.slug = "123"
+        mock_issue.title = "Updated Issue"
+        mock_issue.status = MagicMock(name="Open")
+        mock_issue.priority = "normal"
+
+        mock_client.issues.update = AsyncMock(return_value=mock_issue)
+
+        result = await update_func(
+            "test", "test-repo", 123, title="Updated Issue", ctx=mock_context
+        )
+        assert "Issue updated successfully" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_close_issue(self):
+        """Test that register_tools registers close_issue."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        close_func = None
+        for name, func in tool_calls:
+            if name == "_close_issue":
+                close_func = func
+                break
+
+        assert close_func is not None
+
+        mock_client.issues.close = AsyncMock(return_value=None)
+
+        result = await close_func("test", "test-repo", 123, ctx=mock_context)
+        assert "closed successfully" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_reopen_issue(self):
+        """Test that register_tools registers reopen_issue."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        reopen_func = None
+        for name, func in tool_calls:
+            if name == "_reopen_issue":
+                reopen_func = func
+                break
+
+        assert reopen_func is not None
+
+        mock_client.issues.reopen = AsyncMock(return_value=None)
+
+        result = await reopen_func("test", "test-repo", 123, ctx=mock_context)
+        assert "reopened successfully" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_issue_comments(self):
+        """Test that register_tools registers list_issue_comments."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        list_comments_func = None
+        for name, func in tool_calls:
+            if name == "_list_issue_comments":
+                list_comments_func = func
+                break
+
+        assert list_comments_func is not None
+
+        mock_comment = MagicMock()
+        mock_comment.author = MagicMock(slug="testuser")
+        mock_comment.created_at = "2024-01-15"
+        mock_comment.body = "Test comment"
+
+        mock_result = MagicMock()
+        mock_result.data = [mock_comment]
+        mock_client.issues.list_comments = AsyncMock(return_value=mock_result)
+
+        result = await list_comments_func("test", "test-repo", 123, ctx=mock_context)
+        assert "Test comment" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_add_issue_comment(self):
+        """Test that register_tools registers add_issue_comment."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls = []
+
+        def mock_tool(**kwargs):
+            def decorator(func):
+                tool_calls.append((func.__name__, func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        issues.register_tools(mock_mcp)
+
+        add_comment_func = None
+        for name, func in tool_calls:
+            if name == "_add_issue_comment":
+                add_comment_func = func
+                break
+
+        assert add_comment_func is not None
+
+        mock_comment = MagicMock()
+        mock_comment.author = MagicMock(slug="commenter")
+
+        mock_client.issues.create_comment = AsyncMock(return_value=mock_comment)
+
+        result = await add_comment_func("test", "test-repo", 123, "New comment", ctx=mock_context)
+        assert "Comment added" in result
