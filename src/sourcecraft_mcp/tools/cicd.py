@@ -318,40 +318,23 @@ def register_tools(mcp):
         client = ctx.request_context.lifespan_context.client
 
         try:
-            from pysourcecraft.models import GitRevision, RunWorkflowsRequest, WorkflowData
+            # Determine the ref (branch, tag, or commit)
+            ref = branch or tag or commit or "main"
 
-            head = GitRevision()
-            if branch:
-                head.branch = branch
-            if tag:
-                head.tag = tag
-            if commit:
-                head.commit = commit
+            variables = {"workflows": workflows} if workflows else None
 
-            workflow_data = [WorkflowData(name=w) for w in workflows]
-
-            request = RunWorkflowsRequest(
-                head=head,
-                workflows=workflow_data,
-            )
-
-            result = await client.cicd.run_workflows(
+            result = await client.cicd.create_pipeline(
                 owner=owner,
                 repo=repo,
-                request=request,
+                ref=ref,
+                variables=variables,
             )
 
             lines = [
-                "Workflows triggered successfully!",
-                f"Run ID: {result.id}",
-                f"Run Slug: {result.slug}",
+                "Pipeline triggered successfully!",
+                f"Pipeline ID: {result.id}",
                 f"Status: {result.status}",
             ]
-
-            if result.workflows:
-                lines.append(f"\nStarted workflows ({len(result.workflows)}):")
-                for workflow in result.workflows:
-                    lines.append(f"  • {workflow.slug}")
 
             return "\n".join(lines)
         except Exception as e:

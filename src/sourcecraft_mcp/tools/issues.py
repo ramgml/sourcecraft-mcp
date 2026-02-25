@@ -5,7 +5,6 @@ from __future__ import annotations
 from mcp.server.fastmcp import Context
 from pysourcecraft.models import (
     CreateIssueRequest,
-    Priority,
     UpdateIssueRequest,
 )
 
@@ -44,13 +43,11 @@ def register_tools(mcp):
 
             filters = IssueFilters()
             if status:
-                filters.status = status
-            if priority:
-                filters.priority = priority
+                filters.state = status
             if assignee:
-                filters.assignee_slug = assignee
+                filters.assignee_id = assignee
             if label:
-                filters.label_slug = label
+                filters.label_ids = [label] if label else None
 
             result = await client.issues.list(
                 owner=owner,
@@ -188,10 +185,9 @@ def register_tools(mcp):
         try:
             request = CreateIssueRequest(
                 title=title,
-                description=description or None,
-                priority=Priority(priority) if priority else None,
-                assignee_id=assignee_id or None,
-                label_slugs=label_slugs or None,
+                body=description or None,
+                assignee_ids=[assignee_id] if assignee_id else None,
+                label_ids=label_slugs if label_slugs else None,
             )
 
             result = await client.issues.create(
@@ -241,13 +237,11 @@ def register_tools(mcp):
             if title is not None:
                 request.title = title
             if description is not None:
-                request.description = description or None
+                request.body = description or None
             if status_slug is not None:
-                request.status_slug = status_slug
-            if priority is not None:
-                request.priority = Priority(priority)
+                request.state = status_slug
             if assignee_id is not None:
-                request.assignee_id = assignee_id if assignee_id else None
+                request.assignee_ids = [assignee_id] if assignee_id else None
 
             result = await client.issues.update(
                 owner=owner,
@@ -385,7 +379,7 @@ def register_tools(mcp):
                 body=body,
             )
 
-            author = result.author.slug if result.author else 'unknown'
+            author = result.author.slug if result.author else "unknown"
             return f"Comment added to issue #{issue_number} by @{author}"
         except Exception as e:
             return f"Error adding comment: {e}"

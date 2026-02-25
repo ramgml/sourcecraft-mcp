@@ -6,6 +6,7 @@ from mcp.server.fastmcp import Context
 from pysourcecraft.models import (
     CreatePullRequestRequest,
     MergePullRequestRequest,
+    PRState,
     UpdatePullRequestRequest,
 )
 
@@ -40,11 +41,11 @@ def register_tools(mcp):
         client = ctx.request_context.lifespan_context.client
 
         try:
-            from pysourcecraft.models import PullRequestFilters
+            from pysourcecraft.models import PRFilters
 
-            filters = PullRequestFilters()
+            filters = PRFilters()
             if status:
-                filters.status = status
+                filters.state = PRState(status)
             if author:
                 filters.author_id = author
             if source_branch:
@@ -259,12 +260,13 @@ def register_tools(mcp):
         """
         client = ctx.request_context.lifespan_context.client
 
+        from pysourcecraft.models import PRMergeMethod
+
         try:
             request = MergePullRequestRequest(
                 commit_title=commit_title or None,
                 commit_message=commit_message or None,
-                squash=squash,
-                delete_branch=delete_branch,
+                method=PRMergeMethod.SQUASH if squash else PRMergeMethod.MERGE,
             )
 
             result = await client.pull_requests.merge(
