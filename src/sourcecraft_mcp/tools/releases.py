@@ -14,7 +14,7 @@ def register_tools(mcp):
         repo: str,
         page_size: int = 30,
         page_token: str = "",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List releases in a repository.
 
@@ -24,6 +24,7 @@ def register_tools(mcp):
             page_size: Maximum number of releases to return
             page_token: Token for pagination
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -62,7 +63,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         tag: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get a release by tag.
 
@@ -71,6 +72,7 @@ def register_tools(mcp):
             repo: Repository name
             tag: Release tag
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -129,7 +131,7 @@ def register_tools(mcp):
     async def get_latest_release(
         owner: str,
         repo: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get the latest release in a repository.
 
@@ -137,6 +139,7 @@ def register_tools(mcp):
             owner: Repository owner
             repo: Repository name
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -188,7 +191,7 @@ def register_tools(mcp):
         release_notes: str = "",
         target_branch: str = "",
         publish: bool = False,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Create a new release.
 
@@ -201,6 +204,7 @@ def register_tools(mcp):
             target_branch: Branch to create tag on (if tag doesn't exist)
             publish: Whether to publish immediately (False = draft)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -238,7 +242,7 @@ def register_tools(mcp):
         tag: str,
         title: str | None = None,
         release_notes: str | None = None,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Update a release.
 
@@ -249,6 +253,7 @@ def register_tools(mcp):
             title: New title (optional)
             release_notes: New release notes (optional)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -281,7 +286,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         tag: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Publish a draft release.
 
@@ -290,6 +295,7 @@ def register_tools(mcp):
             repo: Repository name
             tag: Release tag
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -307,7 +313,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         tag: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Discard a published release.
 
@@ -316,6 +322,7 @@ def register_tools(mcp):
             repo: Repository name
             tag: Release tag
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

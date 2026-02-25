@@ -25,8 +25,8 @@ packages = ["src/sourcecraft_mcp"]
 [tool.uv.sources]
 pysourcecraft = { git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git", rev = "v0.1.0" }
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "pre-commit>=4.5.1",
     "pytest>=8.0.0",
     "ruff>=0.6.0",

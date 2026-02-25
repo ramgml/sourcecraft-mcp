@@ -10,9 +10,10 @@ def register_tools(mcp):
 
     @mcp.tool()
     async def get_current_user(
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get information about the currently authenticated user."""
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -53,13 +54,14 @@ def register_tools(mcp):
     @mcp.tool()
     async def get_user(
         username: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get information about a user by username.
 
         Args:
             username: Username to look up
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -96,7 +98,7 @@ def register_tools(mcp):
     async def list_my_issues(
         page_size: int = 30,
         page_token: str = "",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List issues assigned to or created by the authenticated user.
 
@@ -104,6 +106,7 @@ def register_tools(mcp):
             page_size: Maximum number of issues to return
             page_token: Token for pagination
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -145,7 +148,7 @@ def register_tools(mcp):
         role: str = "any",
         page_size: int = 30,
         page_token: str = "",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List pull requests for a user.
 
@@ -155,6 +158,7 @@ def register_tools(mcp):
             page_size: Maximum number of PRs to return
             page_token: Token for pagination
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

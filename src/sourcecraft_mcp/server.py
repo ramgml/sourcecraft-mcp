@@ -10,7 +10,6 @@ from contextlib import asynccontextmanager
 from dataclasses import dataclass
 from typing import AsyncIterator
 
-from mcp.server import Server
 from mcp.server.fastmcp import FastMCP
 from pysourcecraft import SourceCraftClient
 
@@ -33,7 +32,7 @@ class AppContext:
 
 
 @asynccontextmanager
-async def app_lifespan(server: Server) -> AsyncIterator[AppContext]:
+async def app_lifespan(server: FastMCP) -> AsyncIterator[AppContext]:
     """Manage application lifecycle.
 
     Initialize the SourceCraft client on startup and cleanup on shutdown.

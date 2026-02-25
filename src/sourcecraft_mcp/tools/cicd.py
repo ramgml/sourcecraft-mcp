@@ -14,7 +14,7 @@ def register_tools(mcp):
         repo: str,
         page_size: int = 30,
         page_token: str = "",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List CI/CD runs in a repository.
 
@@ -24,6 +24,7 @@ def register_tools(mcp):
             page_size: Maximum number of runs to return
             page_token: Token for pagination (from previous response)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -70,7 +71,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         run_slug: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get detailed information about a CI run.
 
@@ -79,6 +80,7 @@ def register_tools(mcp):
             repo: Repository name
             run_slug: Run slug identifier
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -138,7 +140,7 @@ def register_tools(mcp):
         repo: str,
         run_slug: str,
         workflow_slug: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get detailed information about a workflow in a CI run.
 
@@ -148,6 +150,7 @@ def register_tools(mcp):
             run_slug: Run slug identifier
             workflow_slug: Workflow name as defined in the config
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -198,7 +201,7 @@ def register_tools(mcp):
         task_slug: str,
         cube_slug: str,
         page: int = 1,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get logs from a running CI cube.
 
@@ -211,6 +214,7 @@ def register_tools(mcp):
             cube_slug: Cube name
             page: Page number for log pagination
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -253,7 +257,7 @@ def register_tools(mcp):
         workflow_slug: str,
         task_slug: str,
         cube_slug: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get artifacts from a CI cube.
 
@@ -265,6 +269,7 @@ def register_tools(mcp):
             task_slug: Task name
             cube_slug: Cube name
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -303,7 +308,7 @@ def register_tools(mcp):
         branch: str = "",
         tag: str = "",
         commit: str = "",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Trigger CI workflows in a repository.
 
@@ -315,6 +320,7 @@ def register_tools(mcp):
             tag: Git tag to run on
             commit: Commit SHA to run on
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

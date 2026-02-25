@@ -14,7 +14,7 @@ def register_tools(mcp):
         username: str | None = None,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List repositories for a user or the authenticated user.
 
@@ -23,6 +23,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -58,7 +59,7 @@ def register_tools(mcp):
         org: str,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List repositories in an organization.
 
@@ -67,6 +68,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -96,7 +98,7 @@ def register_tools(mcp):
     async def get_repository(
         owner: str,
         repo: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get detailed information about a repository.
 
@@ -104,6 +106,7 @@ def register_tools(mcp):
             owner: Repository owner
             repo: Repository name
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -150,7 +153,7 @@ def register_tools(mcp):
         description: str = "",
         visibility: str = "private",
         default_branch: str = "main",
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Create a new repository for the authenticated user.
 
@@ -161,6 +164,7 @@ def register_tools(mcp):
             visibility: Repository visibility (public, internal, private)
             default_branch: Default branch name
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -193,7 +197,7 @@ def register_tools(mcp):
         description: str | None = None,
         default_branch: str | None = None,
         visibility: str | None = None,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Update repository settings.
 
@@ -204,6 +208,7 @@ def register_tools(mcp):
             default_branch: New default branch (optional)
             visibility: New visibility (optional)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -235,7 +240,7 @@ def register_tools(mcp):
     async def delete_repository(
         owner: str,
         repo: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Delete a repository.
 
@@ -243,6 +248,7 @@ def register_tools(mcp):
             owner: Repository owner
             repo: Repository name
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -257,7 +263,7 @@ def register_tools(mcp):
         repo: str,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List branches in a repository.
 
@@ -267,6 +273,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -296,7 +303,7 @@ def register_tools(mcp):
         repo: str,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List tags in a repository.
 
@@ -306,6 +313,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -337,7 +345,7 @@ def register_tools(mcp):
         revision: str = "",
         path: str = "",
         recursive: bool = False,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get the file tree of a repository.
 
@@ -348,6 +356,7 @@ def register_tools(mcp):
             path: Path within repository. Root if empty.
             recursive: Whether to retrieve recursively
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

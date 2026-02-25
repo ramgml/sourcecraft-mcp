@@ -24,7 +24,7 @@ def register_tools(mcp):
         target_branch: str | None = None,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List pull requests in a repository.
 
@@ -38,6 +38,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -91,7 +92,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         pull_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get detailed information about a pull request.
 
@@ -100,6 +101,7 @@ def register_tools(mcp):
             repo: Repository name
             pull_number: Pull request number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -156,7 +158,7 @@ def register_tools(mcp):
         description: str = "",
         reviewer_ids: list[str] | None = None,
         publish: bool = False,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Create a new pull request.
 
@@ -170,6 +172,7 @@ def register_tools(mcp):
             reviewer_ids: List of user IDs to assign as reviewers
             publish: Whether to publish immediately (False = draft)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -205,7 +208,7 @@ def register_tools(mcp):
         pull_number: int,
         title: str | None = None,
         description: str | None = None,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Update a pull request.
 
@@ -216,6 +219,7 @@ def register_tools(mcp):
             title: New title (optional)
             description: New description (optional)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -245,7 +249,7 @@ def register_tools(mcp):
         commit_message: str = "",
         squash: bool = False,
         delete_branch: bool = False,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Merge a pull request.
 
@@ -258,6 +262,7 @@ def register_tools(mcp):
             squash: Whether to squash commits
             delete_branch: Whether to delete source branch after merge
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         from pysourcecraft.models import PRMergeMethod
@@ -290,7 +295,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         pull_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Publish a draft pull request (change status to open).
 
@@ -299,6 +304,7 @@ def register_tools(mcp):
             repo: Repository name
             pull_number: Pull request number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -316,7 +322,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         pull_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Discard (close) a pull request.
 
@@ -325,6 +331,7 @@ def register_tools(mcp):
             repo: Repository name
             pull_number: Pull request number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -342,7 +349,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         pull_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List reviewers for a pull request.
 
@@ -351,6 +358,7 @@ def register_tools(mcp):
             repo: Repository name
             pull_number: Pull request number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -385,7 +393,7 @@ def register_tools(mcp):
         repo: str,
         pull_number: int,
         user_id: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Add a reviewer to a pull request.
 
@@ -395,6 +403,7 @@ def register_tools(mcp):
             pull_number: Pull request number
             user_id: User ID to add as reviewer
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -414,7 +423,7 @@ def register_tools(mcp):
         repo: str,
         pull_number: int,
         decision: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Set your review decision on a pull request.
 
@@ -424,6 +433,7 @@ def register_tools(mcp):
             pull_number: Pull request number
             decision: Review decision (approve, trust, block, abstain)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

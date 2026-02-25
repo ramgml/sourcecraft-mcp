@@ -12,7 +12,7 @@ def register_tools(mcp):
     async def list_organizations(
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List organizations.
 
@@ -20,6 +20,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -43,13 +44,14 @@ def register_tools(mcp):
     @mcp.tool()
     async def get_organization(
         org: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get information about an organization.
 
         Args:
             org: Organization slug
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -78,7 +80,7 @@ def register_tools(mcp):
         org: str,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List repositories in an organization.
 
@@ -87,6 +89,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -117,7 +120,7 @@ def register_tools(mcp):
         org: str,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List members of an organization.
 
@@ -126,6 +129,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:

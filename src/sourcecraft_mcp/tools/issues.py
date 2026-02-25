@@ -22,7 +22,7 @@ def register_tools(mcp):
         label: str | None = None,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List issues in a repository.
 
@@ -36,6 +36,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -96,7 +97,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         issue_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Get detailed information about an issue.
 
@@ -105,6 +106,7 @@ def register_tools(mcp):
             repo: Repository name
             issue_number: Issue number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -167,7 +169,7 @@ def register_tools(mcp):
         priority: str = "normal",
         assignee_id: str = "",
         label_slugs: list[str] | None = None,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Create a new issue in a repository.
 
@@ -180,6 +182,7 @@ def register_tools(mcp):
             assignee_id: User ID to assign the issue to
             label_slugs: List of label slugs to apply
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -216,7 +219,7 @@ def register_tools(mcp):
         status_slug: str | None = None,
         priority: str | None = None,
         assignee_id: str | None = None,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Update an existing issue.
 
@@ -230,6 +233,7 @@ def register_tools(mcp):
             priority: New priority (trivial, minor, normal, critical, blocker)
             assignee_id: New assignee ID (empty string to unassign)
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -264,7 +268,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         issue_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Close an issue.
 
@@ -273,6 +277,7 @@ def register_tools(mcp):
             repo: Repository name
             issue_number: Issue number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -290,7 +295,7 @@ def register_tools(mcp):
         owner: str,
         repo: str,
         issue_number: int,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Reopen a closed issue.
 
@@ -299,6 +304,7 @@ def register_tools(mcp):
             repo: Repository name
             issue_number: Issue number
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -318,7 +324,7 @@ def register_tools(mcp):
         issue_number: int,
         page: int = 1,
         per_page: int = 30,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """List comments on an issue.
 
@@ -329,6 +335,7 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
@@ -359,7 +366,7 @@ def register_tools(mcp):
         repo: str,
         issue_number: int,
         body: str,
-        ctx: Context = None,
+        ctx: Context | None = None,
     ) -> str:
         """Add a comment to an issue.
 
@@ -369,6 +376,7 @@ def register_tools(mcp):
             issue_number: Issue number
             body: Comment text
         """
+        assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
