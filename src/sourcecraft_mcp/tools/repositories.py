@@ -6,11 +6,108 @@ from mcp.server.fastmcp import Context
 from pysourcecraft.models import CreateRepositoryRequest, RepoVisibility, UpdateRepositoryRequest
 
 
+async def list_repositories(
+    username: str | None = None,
+    page: int = 1,
+    per_page: int = 30,
+    ctx: Context | None = None,
+) -> str:
+    """List repositories for a user or the authenticated user.
+
+    Args:
+        username: Username to list repos for (None for authenticated user)
+        page: Page number
+        per_page: Items per page
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        result = await client.repositories.list(
+            username=username,
+            page=page,
+            per_page=per_page,
+        )
+
+        repos = result.repositories if hasattr(result, "repositories") else []
+        if not repos:
+            return "No repositories found"
+
+        lines = [f"Found {len(repos)} repositories:"]
+        for repo in repos:
+            visibility = "📦" if repo.visibility == "public" else "🔒"
+            lines.append(
+                f"{visibility} {repo.slug} - {repo.name}\n"
+                f"  Description: {repo.description or 'No description'}\n"
+                f"  Language: {repo.language.name if repo.language else 'Unknown'}\n"
+                f"  Updated: {repo.last_updated}"
+            )
+
+        if hasattr(result, "next_page_token") and result.next_page_token:
+            lines.append(f"\n(More results available, use page={page + 1})")
+
+        return "\n\n".join(lines)
+    except Exception as e:
+        return f"Error listing repositories: {e}"
+
+
+async def get_repository(
+    owner: str,
+    repo: str,
+    ctx: Context | None = None,
+) -> str:
+    """Get detailed information about a repository.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        result = await client.repositories.get(owner=owner, repo=repo)
+
+        visibility = "📦 Public" if result.visibility == "public" else "🔒 Private"
+
+        lines = [
+            f"Repository: {result.slug}",
+            f"Name: {result.name}",
+            f"Visibility: {visibility}",
+            f"Description: {result.description or 'No description'}",
+            f"Default Branch: {result.default_branch}",
+            f"Empty: {'Yes' if result.is_empty else 'No'}",
+        ]
+
+        if result.language:
+            lines.append(f"Language: {result.language.name}")
+
+        if result.counters:
+            lines.append(
+                f"Counters: {result.counters.forks} forks, "
+                f"{result.counters.pull_requests} PRs, "
+                f"{result.counters.issues} issues"
+            )
+
+        lines.extend(
+            [
+                f"Web URL: {result.web_url}",
+                f"Clone (SSH): {result.clone_url.ssh if result.clone_url else 'N/A'}",
+                f"Clone (HTTPS): {result.clone_url.https if result.clone_url else 'N/A'}",
+                f"Last Updated: {result.last_updated}",
+            ]
+        )
+
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error getting repository: {e}"
+
+
 def register_tools(mcp):
     """Register repository tools with the MCP server."""
 
     @mcp.tool()
-    async def list_repositories(
+    async def _list_repositories(
         username: str | None = None,
         page: int = 1,
         per_page: int = 30,
@@ -23,36 +120,12 @@ def register_tools(mcp):
             page: Page number
             per_page: Items per page
         """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            result = await client.repositories.list(
-                username=username,
-                page=page,
-                per_page=per_page,
-            )
-
-            repos = result.repositories if hasattr(result, "repositories") else []
-            if not repos:
-                return "No repositories found"
-
-            lines = [f"Found {len(repos)} repositories:"]
-            for repo in repos:
-                visibility = "📦" if repo.visibility == "public" else "🔒"
-                lines.append(
-                    f"{visibility} {repo.slug} - {repo.name}\n"
-                    f"  Description: {repo.description or 'No description'}\n"
-                    f"  Language: {repo.language.name if repo.language else 'Unknown'}\n"
-                    f"  Updated: {repo.last_updated}"
-                )
-
-            if hasattr(result, "next_page_token") and result.next_page_token:
-                lines.append(f"\n(More results available, use page={page + 1})")
-
-            return "\n\n".join(lines)
-        except Exception as e:
-            return f"Error listing repositories: {e}"
+        return await list_repositories(
+            username=username,
+            page=page,
+            per_page=per_page,
+            ctx=ctx,
+        )
 
     @mcp.tool()
     async def list_organization_repositories(
@@ -95,7 +168,7 @@ def register_tools(mcp):
             return f"Error listing organization repositories: {e}"
 
     @mcp.tool()
-    async def get_repository(
+    async def _get_repository(
         owner: str,
         repo: str,
         ctx: Context | None = None,
@@ -106,45 +179,11 @@ def register_tools(mcp):
             owner: Repository owner
             repo: Repository name
         """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            result = await client.repositories.get(owner=owner, repo=repo)
-
-            visibility = "📦 Public" if result.visibility == "public" else "🔒 Private"
-
-            lines = [
-                f"Repository: {result.slug}",
-                f"Name: {result.name}",
-                f"Visibility: {visibility}",
-                f"Description: {result.description or 'No description'}",
-                f"Default Branch: {result.default_branch}",
-                f"Empty: {'Yes' if result.is_empty else 'No'}",
-            ]
-
-            if result.language:
-                lines.append(f"Language: {result.language.name}")
-
-            if result.counters:
-                lines.append(
-                    f"Counters: {result.counters.forks} forks, "
-                    f"{result.counters.pull_requests} PRs, "
-                    f"{result.counters.issues} issues"
-                )
-
-            lines.extend(
-                [
-                    f"Web URL: {result.web_url}",
-                    f"Clone (SSH): {result.clone_url.ssh if result.clone_url else 'N/A'}",
-                    f"Clone (HTTPS): {result.clone_url.https if result.clone_url else 'N/A'}",
-                    f"Last Updated: {result.last_updated}",
-                ]
-            )
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Error getting repository: {e}"
+        return await get_repository(
+            owner=owner,
+            repo=repo,
+            ctx=ctx,
+        )
 
     @mcp.tool()
     async def create_repository(
