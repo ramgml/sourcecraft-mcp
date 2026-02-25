@@ -211,11 +211,11 @@ def register_tools(mcp):
             from pysourcecraft.models import CreateReleaseRequest
 
             request = CreateReleaseRequest(
-                tag=tag,
-                title=title,
-                release_notes=release_notes or None,
-                target_branch=target_branch or None,
-                publish=publish,
+                tag_name=tag,
+                name=title,
+                body=release_notes or None,
+                target_commitish=target_branch or None,
+                draft=not publish,
             )
 
             result = await client.releases.create(
@@ -261,9 +261,9 @@ def register_tools(mcp):
 
             request = UpdateReleaseRequest()
             if title is not None:
-                request.title = title
+                request.name = title
             if release_notes is not None:
-                request.release_notes = release_notes
+                request.body = release_notes
 
             result = await client.releases.update_by_tag(
                 owner=owner,

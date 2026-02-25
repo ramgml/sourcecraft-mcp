@@ -42,7 +42,7 @@ export SOURCECRAFT_API_TOKEN="your-api-token-here"
 
 Или добавьте в `.env` файл:
 
-```
+```bash
 SOURCECRAFT_API_TOKEN=your-api-token-here
 SOURCECRAFT_BASE_URL=https://api.sourcecraft.tech  # опционально
 ```
@@ -86,7 +86,7 @@ SOURCECRAFT_BASE_URL=https://api.sourcecraft.tech  # опционально
 ### Repositories (8 инструментов)
 
 | Инструмент | Описание |
-|------------|----------|
+| ------------ | ---------- |
 | `list_repositories` | Список репозиториев пользователя |
 | `list_organization_repositories` | Список репозиториев организации |
 | `get_repository` | Информация о репозитории |

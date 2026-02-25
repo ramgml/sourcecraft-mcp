@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from mcp.server.fastmcp import Context
-from pysourcecraft.models import CreateRepositoryRequest, UpdateRepositoryRequest
+from pysourcecraft.models import CreateRepositoryRequest, RepoVisibility, UpdateRepositoryRequest
 
 
 def register_tools(mcp):
@@ -149,31 +149,26 @@ def register_tools(mcp):
     @mcp.tool()
     async def create_repository(
         name: str,
-        slug: str,
         description: str = "",
         visibility: str = "private",
-        default_branch: str = "main",
         ctx: Context | None = None,
     ) -> str:
         """Create a new repository for the authenticated user.
 
         Args:
             name: Repository name
-            slug: Repository slug
             description: Repository description
             visibility: Repository visibility (public, internal, private)
-            default_branch: Default branch name
         """
         assert ctx is not None
         client = ctx.request_context.lifespan_context.client
 
         try:
+            visibility_enum = RepoVisibility(visibility)
             request = CreateRepositoryRequest(
                 name=name,
-                slug=slug,
                 description=description or None,
-                visibility=visibility,
-                init_settings={"default_branch": default_branch, "create_readme": True},
+                visibility=visibility_enum,
             )
 
             result = await client.repositories.create(request=request)
@@ -218,7 +213,7 @@ def register_tools(mcp):
             if default_branch is not None:
                 request.default_branch = default_branch
             if visibility is not None:
-                request.visibility = visibility
+                request.visibility = RepoVisibility(visibility)
 
             result = await client.repositories.update(
                 owner=owner,
