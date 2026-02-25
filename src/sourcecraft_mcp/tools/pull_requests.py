@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from mcp.server.fastmcp import Context
-
 from pysourcecraft.models import (
     CreatePullRequestRequest,
-    UpdatePullRequestRequest,
     MergePullRequestRequest,
-    ReviewDecision,
+    UpdatePullRequestRequest,
 )
 
 
@@ -28,7 +26,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """List pull requests in a repository.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -40,10 +38,10 @@ def register_tools(mcp):
             per_page: Items per page
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             from pysourcecraft.models import PullRequestFilters
-            
+
             filters = PullRequestFilters()
             if status:
                 filters.status = status
@@ -53,7 +51,7 @@ def register_tools(mcp):
                 filters.source_branch = source_branch
             if target_branch:
                 filters.target_branch = target_branch
-            
+
             result = await client.pull_requests.list(
                 owner=owner,
                 repo=repo,
@@ -61,11 +59,11 @@ def register_tools(mcp):
                 page=page,
                 per_page=per_page,
             )
-            
-            prs = result.data if hasattr(result, 'data') else []
+
+            prs = result.data if hasattr(result, "data") else []
             if not prs:
                 return f"No pull requests found in '{owner}/{repo}'"
-            
+
             lines = [f"Pull Requests in '{owner}/{repo}':"]
             for pr in prs:
                 status_icons = {
@@ -76,13 +74,13 @@ def register_tools(mcp):
                     "merged": "✅",
                 }
                 icon = status_icons.get(pr.status, "❓")
-                
+
                 lines.append(
                     f"{icon} #{pr.slug}: {pr.title}\n"
                     f"   Branch: {pr.source_branch} → {pr.target_branch}\n"
                     f"   Author: @{pr.author.slug if pr.author else 'unknown'}"
                 )
-            
+
             return "\n\n".join(lines)
         except Exception as e:
             return f"Error listing pull requests: {e}"
@@ -95,21 +93,21 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Get detailed information about a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
             pull_number: Pull request number
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.pull_requests.get(
                 owner=owner,
                 repo=repo,
                 pull_number=pull_number,
             )
-            
+
             status_icons = {
                 "draft": "📝 Draft",
                 "open": "🟢 Open",
@@ -118,7 +116,7 @@ def register_tools(mcp):
                 "merged": "✅ Merged",
             }
             status_display = status_icons.get(result.status, result.status)
-            
+
             lines = [
                 f"#{result.slug}: {result.title}",
                 f"Status: {status_display}",
@@ -126,21 +124,23 @@ def register_tools(mcp):
                 f"Source: {result.source_branch}",
                 f"Target: {result.target_branch}",
             ]
-            
+
             if result.description:
                 lines.append(f"\nDescription:\n{result.description}")
-            
+
             if result.merge_info:
                 if result.merge_info.merge_commit_hash:
                     lines.append(f"\nMerge Commit: {result.merge_info.merge_commit_hash[:7]}")
                 if result.merge_info.error:
                     lines.append(f"Merge Error: {result.merge_info.error}")
-            
-            lines.extend([
-                f"\nCreated: {result.created_at}",
-                f"Updated: {result.updated_at}",
-            ])
-            
+
+            lines.extend(
+                [
+                    f"\nCreated: {result.created_at}",
+                    f"Updated: {result.updated_at}",
+                ]
+            )
+
             return "\n".join(lines)
         except Exception as e:
             return f"Error getting pull request: {e}"
@@ -158,7 +158,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Create a new pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -170,7 +170,7 @@ def register_tools(mcp):
             publish: Whether to publish immediately (False = draft)
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             request = CreatePullRequestRequest(
                 title=title,
@@ -180,13 +180,13 @@ def register_tools(mcp):
                 reviewer_ids=reviewer_ids or None,
                 publish=publish,
             )
-            
+
             result = await client.pull_requests.create(
                 owner=owner,
                 repo=repo,
                 request=request,
             )
-            
+
             status = "published" if publish else "draft"
             return (
                 f"Pull request created as {status}!\n\n"
@@ -207,7 +207,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Update a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -216,25 +216,22 @@ def register_tools(mcp):
             description: New description (optional)
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             request = UpdatePullRequestRequest()
             if title is not None:
                 request.title = title
             if description is not None:
                 request.description = description
-            
+
             result = await client.pull_requests.update(
                 owner=owner,
                 repo=repo,
                 pull_number=pull_number,
                 request=request,
             )
-            
-            return (
-                f"Pull request updated!\n\n"
-                f"#{result.slug}: {result.title}"
-            )
+
+            return f"Pull request updated!\n\n#{result.slug}: {result.title}"
         except Exception as e:
             return f"Error updating pull request: {e}"
 
@@ -250,7 +247,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Merge a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -261,7 +258,7 @@ def register_tools(mcp):
             delete_branch: Whether to delete source branch after merge
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             request = MergePullRequestRequest(
                 commit_title=commit_title or None,
@@ -269,14 +266,14 @@ def register_tools(mcp):
                 squash=squash,
                 delete_branch=delete_branch,
             )
-            
+
             result = await client.pull_requests.merge(
                 owner=owner,
                 repo=repo,
                 pull_number=pull_number,
                 request=request,
             )
-            
+
             if result.merge_info and result.merge_info.merge_commit_hash:
                 return (
                     f"Pull request #{pull_number} merged successfully!\n"
@@ -294,14 +291,14 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Publish a draft pull request (change status to open).
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
             pull_number: Pull request number
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.pull_requests.publish(
                 owner=owner,
@@ -320,14 +317,14 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Discard (close) a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
             pull_number: Pull request number
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.pull_requests.discard(
                 owner=owner,
@@ -346,25 +343,25 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """List reviewers for a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
             pull_number: Pull request number
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.pull_requests.list_reviewers(
                 owner=owner,
                 repo=repo,
                 pull_number=pull_number,
             )
-            
-            reviewers = result.reviewers if hasattr(result, 'reviewers') else []
+
+            reviewers = result.reviewers if hasattr(result, "reviewers") else []
             if not reviewers:
                 return f"No reviewers assigned to PR #{pull_number}"
-            
+
             lines = [f"Reviewers for PR #{pull_number} in '{owner}/{repo}':"]
             for reviewer in reviewers:
                 decision = reviewer.review_decision or "no decision"
@@ -375,7 +372,7 @@ def register_tools(mcp):
                     "abstain": "➖",
                 }.get(decision, "⏳")
                 lines.append(f"{decision_icon} @{reviewer.user.slug} - {decision}")
-            
+
             return "\n".join(lines)
         except Exception as e:
             return f"Error listing reviewers: {e}"
@@ -389,7 +386,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Add a reviewer to a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -397,7 +394,7 @@ def register_tools(mcp):
             user_id: User ID to add as reviewer
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             await client.pull_requests.add_reviewer(
                 owner=owner,
@@ -418,7 +415,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Set your review decision on a pull request.
-        
+
         Args:
             owner: Repository owner
             repo: Repository name
@@ -426,14 +423,13 @@ def register_tools(mcp):
             decision: Review decision (approve, trust, block, abstain)
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
-            review_decision = ReviewDecision(decision)
-            result = await client.pull_requests.set_review_decision(
+            await client.pull_requests.set_review_decision(
                 owner=owner,
                 repo=repo,
                 pull_number=pull_number,
-                decision=review_decision,
+                decision=decision,
             )
             return f"Review decision '{decision}' set on PR #{pull_number}"
         except Exception as e:

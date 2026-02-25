@@ -1,13 +1,13 @@
 """SourceCraft MCP tools package."""
 
 from sourcecraft_mcp.tools import (
-    repositories,
-    issues,
-    pull_requests,
     cicd,
-    releases,
-    users,
+    issues,
     organizations,
+    pull_requests,
+    releases,
+    repositories,
+    users,
 )
 
 repositories_tools = repositories

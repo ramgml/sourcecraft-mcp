@@ -14,18 +14,18 @@ def register_tools(mcp):
     ) -> str:
         """Get information about the currently authenticated user."""
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.users.get_current()
-            
+
             lines = [
                 f"👤 User: {result.display_name or result.username}",
                 f"Username: @{result.username}",
             ]
-            
+
             if result.bio:
                 lines.append(f"Bio: {result.bio}")
-            
+
             if result.location:
                 loc_parts = []
                 if result.location.city:
@@ -34,18 +34,18 @@ def register_tools(mcp):
                     loc_parts.append(result.location.country)
                 if loc_parts:
                     lines.append(f"Location: {', '.join(loc_parts)}")
-            
+
             if result.workplace:
                 if result.workplace.company:
                     lines.append(f"Company: {result.workplace.company}")
                 if result.workplace.position:
                     lines.append(f"Position: {result.workplace.position}")
-            
+
             if result.links:
                 lines.append(f"Links: {len(result.links)}")
-            
+
             lines.append(f"Visibility: {result.visibility}")
-            
+
             return "\n".join(lines)
         except Exception as e:
             return f"Error getting current user: {e}"
@@ -56,23 +56,23 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """Get information about a user by username.
-        
+
         Args:
             username: Username to look up
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.users.get(username=username)
-            
+
             lines = [
                 f"👤 User: {result.display_name or result.username}",
                 f"Username: @{result.username}",
             ]
-            
+
             if result.bio:
                 lines.append(f"Bio: {result.bio}")
-            
+
             if result.location:
                 loc_parts = []
                 if result.location.city:
@@ -81,13 +81,13 @@ def register_tools(mcp):
                     loc_parts.append(result.location.country)
                 if loc_parts:
                     lines.append(f"Location: {', '.join(loc_parts)}")
-            
+
             if result.workplace:
                 if result.workplace.company:
                     lines.append(f"Company: {result.workplace.company}")
                 if result.workplace.position:
                     lines.append(f"Position: {result.workplace.position}")
-            
+
             return "\n".join(lines)
         except Exception as e:
             return f"Error getting user: {e}"
@@ -99,23 +99,23 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """List issues assigned to or created by the authenticated user.
-        
+
         Args:
             page_size: Maximum number of issues to return
             page_token: Token for pagination
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.users.list_my_issues(
                 page_size=page_size,
                 page_token=page_token or None,
             )
-            
-            issues = result.issues if hasattr(result, 'issues') else []
+
+            issues = result.issues if hasattr(result, "issues") else []
             if not issues:
                 return "No issues found for you"
-            
+
             lines = [f"Your issues ({len(issues)}):"]
             for issue in issues:
                 status_icon = "🟢" if issue.status.slug == "open" else "🔴"
@@ -129,12 +129,12 @@ def register_tools(mcp):
                         "blocker": "🚫",
                     }
                     priority_icon = priority_map.get(issue.priority, "")
-                
+
                 lines.append(
                     f"{status_icon} #{issue.slug} {priority_icon}{issue.title}\n"
                     f"   Status: {issue.status.name} | Priority: {issue.priority or 'normal'}"
                 )
-            
+
             return "\n\n".join(lines)
         except Exception as e:
             return f"Error listing my issues: {e}"
@@ -148,7 +148,7 @@ def register_tools(mcp):
         ctx: Context = None,
     ) -> str:
         """List pull requests for a user.
-        
+
         Args:
             username: Username to look up PRs for
             role: Role filter (author, reviewer, any)
@@ -156,7 +156,7 @@ def register_tools(mcp):
             page_token: Token for pagination
         """
         client = ctx.request_context.lifespan_context.client
-        
+
         try:
             result = await client.users.list_pull_requests(
                 username=username,
@@ -164,11 +164,11 @@ def register_tools(mcp):
                 page_size=page_size,
                 page_token=page_token or None,
             )
-            
-            prs = result.pull_requests if hasattr(result, 'pull_requests') else []
+
+            prs = result.pull_requests if hasattr(result, "pull_requests") else []
             if not prs:
                 return f"No pull requests found for @{username}"
-            
+
             lines = [f"Pull requests for @{username} (role: {role}):"]
             for pr in prs:
                 status_icons = {
@@ -179,13 +179,13 @@ def register_tools(mcp):
                     "merged": "✅",
                 }
                 icon = status_icons.get(pr.status, "❓")
-                
+
                 lines.append(
                     f"{icon} #{pr.slug}: {pr.title}\n"
                     f"   Branch: {pr.source_branch} → {pr.target_branch}\n"
                     f"   Status: {pr.status}"
                 )
-            
+
             return "\n\n".join(lines)
         except Exception as e:
             return f"Error listing user pull requests: {e}"

@@ -11,44 +11,44 @@ from dataclasses import dataclass
 from typing import AsyncIterator
 
 from mcp.server import Server
-from mcp.server.fastmcp import FastMCP, Context
-from pysourcecraft import SourceCraftClient, APIError
+from mcp.server.fastmcp import FastMCP
+from pysourcecraft import SourceCraftClient
 
 from sourcecraft_mcp.tools import (
-    repositories_tools,
-    issues_tools,
-    pull_requests_tools,
     cicd_tools,
-    releases_tools,
-    users_tools,
+    issues_tools,
     organizations_tools,
+    pull_requests_tools,
+    releases_tools,
+    repositories_tools,
+    users_tools,
 )
 
 
 @dataclass
 class AppContext:
     """Application context containing the SourceCraft client."""
-    
+
     client: SourceCraftClient
 
 
 @asynccontextmanager
 async def app_lifespan(server: Server) -> AsyncIterator[AppContext]:
     """Manage application lifecycle.
-    
+
     Initialize the SourceCraft client on startup and cleanup on shutdown.
     """
     api_token = os.environ.get("SOURCECRAFT_API_TOKEN")
     base_url = os.environ.get("SOURCECRAFT_BASE_URL", "https://api.sourcecraft.tech")
-    
+
     if not api_token:
         raise ValueError(
             "SOURCECRAFT_API_TOKEN environment variable is required. "
             "Please set it to your SourceCraft API token."
         )
-    
+
     client = SourceCraftClient(api_token=api_token, base_url=base_url)
-    
+
     try:
         yield AppContext(client=client)
     finally:

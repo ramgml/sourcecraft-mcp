@@ -27,6 +27,7 @@ pysourcecraft = { git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git", r
 
 [tool.uv]
 dev-dependencies = [
+    "pre-commit>=4.5.1",
     "pytest>=8.0.0",
     "ruff>=0.6.0",
 ]
