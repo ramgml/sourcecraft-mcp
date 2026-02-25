@@ -316,3 +316,183 @@ class TestListOrganizationMembers:
         result = await organizations.list_organization_members(org="myorg", ctx=mock_context)
 
         assert "Error listing organization members" in result
+
+
+class TestRegisterTools:
+    """Test register_tools function."""
+
+    def test_register_tools_registers_all_tools(self) -> None:
+        """Test that all tools are registered."""
+        mock_mcp = MagicMock()
+        tool_count: list[str] = []
+
+        def capture_tool(func: object) -> object:
+            tool_count.append(getattr(func, "__name__", str(func)))
+            return func
+
+        mock_mcp.tool = MagicMock(return_value=capture_tool)
+        organizations.register_tools(mock_mcp)
+
+        assert mock_mcp.tool.call_count == 4
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_organizations(self) -> None:
+        """Test that register_tools registers _list_organizations."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        organizations.register_tools(mock_mcp)
+
+        list_func = None
+        for name, func in tool_calls:
+            if name == "_list_organizations":
+                list_func = func
+                break
+
+        assert list_func is not None
+
+        mock_org = MagicMock()
+        mock_org.slug = "testorg"
+        mock_org.name = "Test Organization"
+
+        mock_result = MagicMock()
+        mock_result.organizations = [mock_org]
+
+        mock_client.organizations.list = AsyncMock(return_value=mock_result)
+
+        result = await list_func(page=1, per_page=30, ctx=mock_context)
+        assert "Test Organization" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_organization(self) -> None:
+        """Test that register_tools registers _get_organization."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        organizations.register_tools(mock_mcp)
+
+        get_func = None
+        for name, func in tool_calls:
+            if name == "_get_organization":
+                get_func = func
+                break
+
+        assert get_func is not None
+
+        mock_org = MagicMock()
+        mock_org.slug = "myorg"
+        mock_org.name = "My Organization"
+        mock_org.description = "A test org"
+        mock_org.website = "https://example.com"
+        mock_org.created_at = "2024-01-01"
+
+        mock_client.organizations.get = AsyncMock(return_value=mock_org)
+
+        result = await get_func(org="myorg", ctx=mock_context)
+        assert "My Organization" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_organization_repositories(self) -> None:
+        """Test that register_tools registers _list_organization_repositories."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        organizations.register_tools(mock_mcp)
+
+        list_repos_func = None
+        for name, func in tool_calls:
+            if name == "_list_organization_repositories":
+                list_repos_func = func
+                break
+
+        assert list_repos_func is not None
+
+        mock_repo = MagicMock()
+        mock_repo.slug = "test-repo"
+        mock_repo.visibility = "public"
+        mock_repo.description = "Test repo"
+
+        mock_result = MagicMock()
+        mock_result.repositories = [mock_repo]
+
+        mock_client.organizations.list_repos = AsyncMock(return_value=mock_result)
+
+        result = await list_repos_func(org="myorg", page=1, per_page=30, ctx=mock_context)
+        assert "test-repo" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_organization_members(self) -> None:
+        """Test that register_tools registers _list_organization_members."""
+        mock_mcp = MagicMock()
+        mock_client = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        organizations.register_tools(mock_mcp)
+
+        list_members_func = None
+        for name, func in tool_calls:
+            if name == "_list_organization_members":
+                list_members_func = func
+                break
+
+        assert list_members_func is not None
+
+        mock_member = MagicMock()
+        mock_member.user = MagicMock()
+        mock_member.user.slug = "testuser"
+        mock_member.role = "owner"
+
+        mock_result = MagicMock()
+        mock_result.members = [mock_member]
+
+        mock_client.organizations.list_members = AsyncMock(return_value=mock_result)
+
+        result = await list_members_func(org="myorg", page=1, per_page=30, ctx=mock_context)
+        assert "@testuser" in result
