@@ -9,11 +9,391 @@ from pysourcecraft.models import (
 )
 
 
+async def list_issues(
+    owner: str,
+    repo: str,
+    status: str | None = None,
+    priority: str | None = None,
+    assignee: str | None = None,
+    label: str | None = None,
+    page: int = 1,
+    per_page: int = 30,
+    ctx: Context | None = None,
+) -> str:
+    """List issues in a repository.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        status: Filter by status (open, inProgress, paused, closed, etc.)
+        priority: Filter by priority (trivial, minor, normal, critical, blocker)
+        assignee: Filter by assignee username
+        label: Filter by label slug
+        page: Page number
+        per_page: Items per page
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        from pysourcecraft.models import IssueFilters
+
+        filters = IssueFilters()
+        if status:
+            filters.state = status
+        if assignee:
+            filters.assignee_id = assignee
+        if label:
+            filters.label_ids = [label] if label else None
+
+        result = await client.issues.list(
+            owner=owner,
+            repo=repo,
+            filters=filters,
+            page=page,
+            per_page=per_page,
+        )
+
+        issues_data = result.data if hasattr(result, "data") else []
+        if not issues_data:
+            return f"No issues found in '{owner}/{repo}'"
+
+        lines = [f"Issues in '{owner}/{repo}':"]
+        for issue in issues_data:
+            status_icon = (
+                "🟢"
+                if issue.status.slug == "open"
+                else "🔴"
+                if issue.status.slug == "closed"
+                else "🟡"
+            )
+            assignee_info = f" @{issue.assignee.slug}" if issue.assignee else " (unassigned)"
+            priority_icon = ""
+            if issue.priority:
+                priority_map = {
+                    "trivial": "🔹",
+                    "minor": "🔸",
+                    "normal": "",
+                    "critical": "⚠️",
+                    "blocker": "🚫",
+                }
+                priority_icon = priority_map.get(issue.priority, "")
+
+            lines.append(
+                f"{status_icon} #{issue.slug} {priority_icon}{issue.title}{assignee_info}\n"
+                f"   Status: {issue.status.name} | Priority: {issue.priority or 'normal'}"
+            )
+
+        return "\n\n".join(lines)
+    except Exception as e:
+        return f"Error listing issues: {e}"
+
+
+async def get_issue(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    ctx: Context | None = None,
+) -> str:
+    """Get detailed information about an issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        result = await client.issues.get(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+        )
+
+        status_icon = (
+            "🟢"
+            if result.status.slug == "open"
+            else "🔴"
+            if result.status.slug == "closed"
+            else "🟡"
+        )
+
+        lines = [
+            f"{status_icon} Issue #{result.slug}: {result.title}",
+            f"Description: {result.description or 'No description'}",
+            f"Status: {result.status.name}",
+            f"Priority: {result.priority or 'normal'}",
+            f"Author: @{result.author.slug if result.author else 'unknown'}",
+        ]
+
+        if result.assignee:
+            lines.append(f"Assignee: @{result.assignee.slug}")
+
+        if result.labels:
+            label_names = [label.name for label in result.labels]
+            lines.append(f"Labels: {', '.join(label_names)}")
+
+        if result.milestone:
+            lines.append(f"Milestone: {result.milestone.slug}")
+
+        if result.deadline:
+            lines.append(f"Deadline: {result.deadline}")
+
+        if result.linked_prs:
+            pr_links = [f"#{pr.slug}" for pr in result.linked_prs]
+            lines.append(f"Linked PRs: {', '.join(pr_links)}")
+
+        lines.extend(
+            [
+                f"Created: {result.created_at}",
+                f"Updated: {result.updated_at}",
+            ]
+        )
+
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error getting issue: {e}"
+
+
+async def create_issue(
+    owner: str,
+    repo: str,
+    title: str,
+    description: str = "",
+    priority: str = "normal",
+    assignee_id: str = "",
+    label_slugs: list[str] | None = None,
+    ctx: Context | None = None,
+) -> str:
+    """Create a new issue in a repository.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        title: Issue title
+        description: Issue description
+        priority: Issue priority (trivial, minor, normal, critical, blocker)
+        assignee_id: User ID to assign the issue to
+        label_slugs: List of label slugs to apply
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        request = CreateIssueRequest(
+            title=title,
+            body=description or None,
+            assignee_ids=[assignee_id] if assignee_id else None,
+            label_ids=label_slugs if label_slugs else None,
+        )
+
+        result = await client.issues.create(
+            owner=owner,
+            repo=repo,
+            request=request,
+        )
+
+        return (
+            f"Issue created successfully!\n\n"
+            f"Issue #{result.slug}: {result.title}\n"
+            f"Status: {result.status.name}\n"
+            f"Priority: {result.priority or 'normal'}\n"
+            f"Author: @{result.author.slug if result.author else 'unknown'}"
+        )
+    except Exception as e:
+        return f"Error creating issue: {e}"
+
+
+async def update_issue(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    title: str | None = None,
+    description: str | None = None,
+    status_slug: str | None = None,
+    priority: str | None = None,
+    assignee_id: str | None = None,
+    ctx: Context | None = None,
+) -> str:
+    """Update an existing issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+        title: New title (optional)
+        description: New description (optional)
+        status_slug: New status slug (open, inProgress, paused, closed, etc.)
+        priority: New priority (trivial, minor, normal, critical, blocker)
+        assignee_id: New assignee ID (empty string to unassign)
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        request = UpdateIssueRequest()
+        if title is not None:
+            request.title = title
+        if description is not None:
+            request.body = description or None
+        if status_slug is not None:
+            request.state = status_slug
+        if assignee_id is not None:
+            request.assignee_ids = [assignee_id] if assignee_id else None
+
+        result = await client.issues.update(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            request=request,
+        )
+
+        return (
+            f"Issue updated successfully!\n\n"
+            f"Issue #{result.slug}: {result.title}\n"
+            f"Status: {result.status.name}\n"
+            f"Priority: {result.priority or 'normal'}"
+        )
+    except Exception as e:
+        return f"Error updating issue: {e}"
+
+
+async def close_issue(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    ctx: Context | None = None,
+) -> str:
+    """Close an issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        await client.issues.close(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+        )
+        return f"Issue #{issue_number} in '{owner}/{repo}' closed successfully"
+    except Exception as e:
+        return f"Error closing issue: {e}"
+
+
+async def reopen_issue(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    ctx: Context | None = None,
+) -> str:
+    """Reopen a closed issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        await client.issues.reopen(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+        )
+        return f"Issue #{issue_number} in '{owner}/{repo}' reopened successfully"
+    except Exception as e:
+        return f"Error reopening issue: {e}"
+
+
+async def list_issue_comments(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    page: int = 1,
+    per_page: int = 30,
+    ctx: Context | None = None,
+) -> str:
+    """List comments on an issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+        page: Page number
+        per_page: Items per page
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        result = await client.issues.list_comments(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            page=page,
+            per_page=per_page,
+        )
+
+        comments = result.data if hasattr(result, "data") else []
+        if not comments:
+            return f"No comments on issue #{issue_number}"
+
+        lines = [f"Comments on issue #{issue_number} in '{owner}/{repo}':"]
+        for comment in comments:
+            author = f"@{comment.author.slug}" if comment.author else "unknown"
+            lines.append(f"\n{author} at {comment.created_at}:\n{comment.body}")
+
+        return "\n".join(lines)
+    except Exception as e:
+        return f"Error listing comments: {e}"
+
+
+async def add_issue_comment(
+    owner: str,
+    repo: str,
+    issue_number: int,
+    body: str,
+    ctx: Context | None = None,
+) -> str:
+    """Add a comment to an issue.
+
+    Args:
+        owner: Repository owner
+        repo: Repository name
+        issue_number: Issue number
+        body: Comment text
+    """
+    assert ctx is not None
+    client = ctx.request_context.lifespan_context.client
+
+    try:
+        result = await client.issues.create_comment(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            body=body,
+        )
+
+        author = result.author.slug if result.author else "unknown"
+        return f"Comment added to issue #{issue_number} by @{author}"
+    except Exception as e:
+        return f"Error adding comment: {e}"
+
+
 def register_tools(mcp):
     """Register issue tools with the MCP server."""
 
     @mcp.tool()
-    async def list_issues(
+    async def _list_issues(
         owner: str,
         repo: str,
         status: str | None = None,
@@ -24,144 +404,34 @@ def register_tools(mcp):
         per_page: int = 30,
         ctx: Context | None = None,
     ) -> str:
-        """List issues in a repository.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            status: Filter by status (open, inProgress, paused, closed, etc.)
-            priority: Filter by priority (trivial, minor, normal, critical, blocker)
-            assignee: Filter by assignee username
-            label: Filter by label slug
-            page: Page number
-            per_page: Items per page
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            from pysourcecraft.models import IssueFilters
-
-            filters = IssueFilters()
-            if status:
-                filters.state = status
-            if assignee:
-                filters.assignee_id = assignee
-            if label:
-                filters.label_ids = [label] if label else None
-
-            result = await client.issues.list(
-                owner=owner,
-                repo=repo,
-                filters=filters,
-                page=page,
-                per_page=per_page,
-            )
-
-            issues = result.data if hasattr(result, "data") else []
-            if not issues:
-                return f"No issues found in '{owner}/{repo}'"
-
-            lines = [f"Issues in '{owner}/{repo}':"]
-            for issue in issues:
-                status_icon = (
-                    "🟢"
-                    if issue.status.slug == "open"
-                    else "🔴"
-                    if issue.status.slug == "closed"
-                    else "🟡"
-                )
-                assignee_info = f" @{issue.assignee.slug}" if issue.assignee else " (unassigned)"
-                priority_icon = ""
-                if issue.priority:
-                    priority_map = {
-                        "trivial": "🔹",
-                        "minor": "🔸",
-                        "normal": "",
-                        "critical": "⚠️",
-                        "blocker": "🚫",
-                    }
-                    priority_icon = priority_map.get(issue.priority, "")
-
-                lines.append(
-                    f"{status_icon} #{issue.slug} {priority_icon}{issue.title}{assignee_info}\n"
-                    f"   Status: {issue.status.name} | Priority: {issue.priority or 'normal'}"
-                )
-
-            return "\n\n".join(lines)
-        except Exception as e:
-            return f"Error listing issues: {e}"
+        return await list_issues(
+            owner=owner,
+            repo=repo,
+            status=status,
+            priority=priority,
+            assignee=assignee,
+            label=label,
+            page=page,
+            per_page=per_page,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def get_issue(
+    async def _get_issue(
         owner: str,
         repo: str,
         issue_number: int,
         ctx: Context | None = None,
     ) -> str:
-        """Get detailed information about an issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            result = await client.issues.get(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-            )
-
-            status_icon = (
-                "🟢"
-                if result.status.slug == "open"
-                else "🔴"
-                if result.status.slug == "closed"
-                else "🟡"
-            )
-
-            lines = [
-                f"{status_icon} Issue #{result.slug}: {result.title}",
-                f"Description: {result.description or 'No description'}",
-                f"Status: {result.status.name}",
-                f"Priority: {result.priority or 'normal'}",
-                f"Author: @{result.author.slug if result.author else 'unknown'}",
-            ]
-
-            if result.assignee:
-                lines.append(f"Assignee: @{result.assignee.slug}")
-
-            if result.labels:
-                label_names = [label.name for label in result.labels]
-                lines.append(f"Labels: {', '.join(label_names)}")
-
-            if result.milestone:
-                lines.append(f"Milestone: {result.milestone.slug}")
-
-            if result.deadline:
-                lines.append(f"Deadline: {result.deadline}")
-
-            if result.linked_prs:
-                pr_links = [f"#{pr.slug}" for pr in result.linked_prs]
-                lines.append(f"Linked PRs: {', '.join(pr_links)}")
-
-            lines.extend(
-                [
-                    f"Created: {result.created_at}",
-                    f"Updated: {result.updated_at}",
-                ]
-            )
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Error getting issue: {e}"
+        return await get_issue(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def create_issue(
+    async def _create_issue(
         owner: str,
         repo: str,
         title: str,
@@ -171,46 +441,19 @@ def register_tools(mcp):
         label_slugs: list[str] | None = None,
         ctx: Context | None = None,
     ) -> str:
-        """Create a new issue in a repository.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            title: Issue title
-            description: Issue description
-            priority: Issue priority (trivial, minor, normal, critical, blocker)
-            assignee_id: User ID to assign the issue to
-            label_slugs: List of label slugs to apply
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            request = CreateIssueRequest(
-                title=title,
-                body=description or None,
-                assignee_ids=[assignee_id] if assignee_id else None,
-                label_ids=label_slugs if label_slugs else None,
-            )
-
-            result = await client.issues.create(
-                owner=owner,
-                repo=repo,
-                request=request,
-            )
-
-            return (
-                f"Issue created successfully!\n\n"
-                f"Issue #{result.slug}: {result.title}\n"
-                f"Status: {result.status.name}\n"
-                f"Priority: {result.priority or 'normal'}\n"
-                f"Author: @{result.author.slug if result.author else 'unknown'}"
-            )
-        except Exception as e:
-            return f"Error creating issue: {e}"
+        return await create_issue(
+            owner=owner,
+            repo=repo,
+            title=title,
+            description=description,
+            priority=priority,
+            assignee_id=assignee_id,
+            label_slugs=label_slugs,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def update_issue(
+    async def _update_issue(
         owner: str,
         repo: str,
         issue_number: int,
@@ -221,104 +464,48 @@ def register_tools(mcp):
         assignee_id: str | None = None,
         ctx: Context | None = None,
     ) -> str:
-        """Update an existing issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-            title: New title (optional)
-            description: New description (optional)
-            status_slug: New status slug (open, inProgress, paused, closed, etc.)
-            priority: New priority (trivial, minor, normal, critical, blocker)
-            assignee_id: New assignee ID (empty string to unassign)
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            request = UpdateIssueRequest()
-            if title is not None:
-                request.title = title
-            if description is not None:
-                request.body = description or None
-            if status_slug is not None:
-                request.state = status_slug
-            if assignee_id is not None:
-                request.assignee_ids = [assignee_id] if assignee_id else None
-
-            result = await client.issues.update(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-                request=request,
-            )
-
-            return (
-                f"Issue updated successfully!\n\n"
-                f"Issue #{result.slug}: {result.title}\n"
-                f"Status: {result.status.name}\n"
-                f"Priority: {result.priority or 'normal'}"
-            )
-        except Exception as e:
-            return f"Error updating issue: {e}"
+        return await update_issue(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            title=title,
+            description=description,
+            status_slug=status_slug,
+            priority=priority,
+            assignee_id=assignee_id,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def close_issue(
+    async def _close_issue(
         owner: str,
         repo: str,
         issue_number: int,
         ctx: Context | None = None,
     ) -> str:
-        """Close an issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            await client.issues.close(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-            )
-            return f"Issue #{issue_number} in '{owner}/{repo}' closed successfully"
-        except Exception as e:
-            return f"Error closing issue: {e}"
+        return await close_issue(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def reopen_issue(
+    async def _reopen_issue(
         owner: str,
         repo: str,
         issue_number: int,
         ctx: Context | None = None,
     ) -> str:
-        """Reopen a closed issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            await client.issues.reopen(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-            )
-            return f"Issue #{issue_number} in '{owner}/{repo}' reopened successfully"
-        except Exception as e:
-            return f"Error reopening issue: {e}"
+        return await reopen_issue(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def list_issue_comments(
+    async def _list_issue_comments(
         owner: str,
         repo: str,
         issue_number: int,
@@ -326,68 +513,27 @@ def register_tools(mcp):
         per_page: int = 30,
         ctx: Context | None = None,
     ) -> str:
-        """List comments on an issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-            page: Page number
-            per_page: Items per page
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            result = await client.issues.list_comments(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-                page=page,
-                per_page=per_page,
-            )
-
-            comments = result.data if hasattr(result, "data") else []
-            if not comments:
-                return f"No comments on issue #{issue_number}"
-
-            lines = [f"Comments on issue #{issue_number} in '{owner}/{repo}':"]
-            for comment in comments:
-                author = f"@{comment.author.slug}" if comment.author else "unknown"
-                lines.append(f"\n{author} at {comment.created_at}:\n{comment.body}")
-
-            return "\n".join(lines)
-        except Exception as e:
-            return f"Error listing comments: {e}"
+        return await list_issue_comments(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            page=page,
+            per_page=per_page,
+            ctx=ctx,
+        )
 
     @mcp.tool()
-    async def add_issue_comment(
+    async def _add_issue_comment(
         owner: str,
         repo: str,
         issue_number: int,
         body: str,
         ctx: Context | None = None,
     ) -> str:
-        """Add a comment to an issue.
-
-        Args:
-            owner: Repository owner
-            repo: Repository name
-            issue_number: Issue number
-            body: Comment text
-        """
-        assert ctx is not None
-        client = ctx.request_context.lifespan_context.client
-
-        try:
-            result = await client.issues.create_comment(
-                owner=owner,
-                repo=repo,
-                issue_number=issue_number,
-                body=body,
-            )
-
-            author = result.author.slug if result.author else "unknown"
-            return f"Comment added to issue #{issue_number} by @{author}"
-        except Exception as e:
-            return f"Error adding comment: {e}"
+        return await add_issue_comment(
+            owner=owner,
+            repo=repo,
+            issue_number=issue_number,
+            body=body,
+            ctx=ctx,
+        )

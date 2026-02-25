@@ -81,7 +81,8 @@ def format_datetime(dt: datetime | str | None) -> str:
         return "N/A"
     if isinstance(dt, str):
         try:
-            dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+            parsed_dt = datetime.fromisoformat(dt.replace("Z", "+00:00"))
+            return parsed_dt.strftime("%Y-%m-%d %H:%M UTC")
         except ValueError:
             return dt
     return dt.strftime("%Y-%m-%d %H:%M UTC")
