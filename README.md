@@ -24,6 +24,88 @@ cd sourcecraft-mcp
 uv pip install -e .
 ```
 
+### Установка без PyPI
+
+#### 1. Установка из Git репозитория
+
+Добавьте в `pyproject.toml` другого проекта:
+
+```toml
+[tool.uv.sources]
+sourcecraft-mcp = { git = "https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git" }
+```
+
+Или установите напрямую:
+
+```bash
+uv pip install "git+https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git"
+```
+
+#### 2. Настройка MCP с использованием uv и git зависимостей
+
+```json
+{
+  "mcpServers": {
+    "sourcecraft": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "git+https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git",
+        "--with",
+        "git+https://git.sourcecraft.dev/ram56/pysourcecraft.git@v0.1.0",
+        "python",
+        "-m",
+        "sourcecraft_mcp.server"
+      ],
+      "env": {
+        "SOURCECRAFT_API_TOKEN": "your-api-token"
+      }
+    }
+  }
+}
+```
+
+#### 3. Локальная разработка
+
+Установите в режиме для разработки:
+
+```bash
+uv pip install -e /path/to/sourcecraft-mcp
+```
+
+Конфигурация MCP с PYTHONPATH:
+
+```json
+{
+  "mcpServers": {
+    "sourcecraft": {
+      "command": "python",
+      "args": ["-m", "sourcecraft_mcp.server"],
+      "env": {
+        "SOURCECRAFT_API_TOKEN": "your-api-token",
+        "PYTHONPATH": "/path/to/sourcecraft-mcp/src"
+      }
+    }
+  }
+}
+```
+
+#### 4. Использование точки входа (после установки из git)
+
+```json
+{
+  "mcpServers": {
+    "sourcecraft": {
+      "command": "sourcecraft-mcp",
+      "env": {
+        "SOURCECRAFT_API_TOKEN": "your-api-token"
+      }
+    }
+  }
+}
+```
+
 ## Настройка
 
 ### Получение API токена
