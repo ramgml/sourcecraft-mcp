@@ -638,3 +638,259 @@ class TestTriggerWorkflows:
         )
 
         assert "Error triggering workflows" in result
+
+
+class TestRegisterTools:
+    """Test register_tools function."""
+
+    def test_register_tools_registers_all_tools(self) -> None:
+        """Test that all tools are registered."""
+        mock_mcp = MagicMock()
+        tool_count: list[str] = []
+
+        def capture_tool(func: object) -> object:
+            tool_count.append(getattr(func, "__name__", str(func)))
+            return func
+
+        mock_mcp.tool = MagicMock(return_value=capture_tool)
+        cicd.register_tools(mock_mcp)
+
+        assert mock_mcp.tool.call_count == 6
+
+    @pytest.mark.asyncio
+    async def test_register_tools_list_ci_runs(self, mock_client) -> None:
+        """Test that register_tools registers _list_ci_runs."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        list_func = None
+        for name, func in tool_calls:
+            if name == "_list_ci_runs":
+                list_func = func
+                break
+
+        assert list_func is not None
+
+        mock_run = MagicMock()
+        mock_run.slug = "run-1"
+        mock_run.status = "success"
+        mock_run.event_type = "push"
+        mock_run.dates = MagicMock()
+        mock_run.dates.created_at = "2024-01-15T10:00:00Z"
+
+        mock_result = MagicMock()
+        mock_result.runs = [mock_run]
+
+        mock_client.cicd.list_runs = AsyncMock(return_value=mock_result)
+
+        result = await list_func("test", "test-repo", ctx=mock_context)
+        assert "CI/CD runs" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_ci_run(self, mock_client) -> None:
+        """Test that register_tools registers _get_ci_run."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        get_func = None
+        for name, func in tool_calls:
+            if name == "_get_ci_run":
+                get_func = func
+                break
+
+        assert get_func is not None
+
+        mock_run = MagicMock()
+        mock_run.slug = "run-123"
+        mock_run.status = "success"
+        mock_run.event_type = "push"
+        mock_run.dates = None
+        mock_run.user = None
+        mock_run.pull = None
+        mock_run.workflows = []
+        mock_run.error_messages = []
+
+        mock_client.cicd.get_run = AsyncMock(return_value=mock_run)
+
+        result = await get_func("test", "test-repo", "run-123", ctx=mock_context)
+        assert "CI Run #run-123" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_workflow(self, mock_client) -> None:
+        """Test that register_tools registers _get_workflow."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        get_func = None
+        for name, func in tool_calls:
+            if name == "_get_workflow":
+                get_func = func
+                break
+
+        assert get_func is not None
+
+        mock_workflow = MagicMock()
+        mock_workflow.slug = "build"
+        mock_workflow.status = "success"
+        mock_workflow.description = None
+        mock_workflow.dates = None
+        mock_workflow.progress = None
+        mock_workflow.tasks = []
+
+        mock_client.cicd.get_workflow = AsyncMock(return_value=mock_workflow)
+
+        result = await get_func("test", "test-repo", "run-123", "build", ctx=mock_context)
+        assert "Workflow: build" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_cube_logs(self, mock_client) -> None:
+        """Test that register_tools registers _get_cube_logs."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        logs_func = None
+        for name, func in tool_calls:
+            if name == "_get_cube_logs":
+                logs_func = func
+                break
+
+        assert logs_func is not None
+
+        mock_result = MagicMock()
+        mock_result.logs = "test log"
+        mock_result.page_complete = False
+        mock_result.done = False
+
+        mock_client.cicd.get_cube_logs = AsyncMock(return_value=mock_result)
+
+        result = await logs_func(
+            "test", "test-repo", "run-123", "build", "task", "cube", page=1, ctx=mock_context
+        )
+        assert "Logs for cube" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_get_artifacts(self, mock_client) -> None:
+        """Test that register_tools registers _get_artifacts."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        artifacts_func = None
+        for name, func in tool_calls:
+            if name == "_get_artifacts":
+                artifacts_func = func
+                break
+
+        assert artifacts_func is not None
+
+        mock_result = MagicMock()
+        mock_result.artifacts = []
+
+        mock_client.cicd.get_artifacts = AsyncMock(return_value=mock_result)
+
+        result = await artifacts_func(
+            "test", "test-repo", "run-123", "build", "task", "cube", ctx=mock_context
+        )
+        assert "No artifacts found" in result
+
+    @pytest.mark.asyncio
+    async def test_register_tools_trigger_workflows(self, mock_client) -> None:
+        """Test that register_tools registers _trigger_workflows."""
+        mock_mcp = MagicMock()
+        mock_context = MagicMock()
+        mock_context.request_context.lifespan_context.client = mock_client
+
+        tool_calls: list[tuple[str, object]] = []
+
+        def mock_tool(**kwargs: object) -> object:
+            def decorator(func: object) -> object:
+                tool_calls.append((getattr(func, "__name__", str(func)), func))
+                return func
+
+            return decorator
+
+        mock_mcp.tool = mock_tool
+        cicd.register_tools(mock_mcp)
+
+        trigger_func = None
+        for name, func in tool_calls:
+            if name == "_trigger_workflows":
+                trigger_func = func
+                break
+
+        assert trigger_func is not None
+
+        mock_result = MagicMock()
+        mock_result.id = "pipe-123"
+        mock_result.status = "created"
+
+        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+
+        result = await trigger_func(
+            "test", "test-repo", ["build"], branch="main", tag="", commit="", ctx=mock_context
+        )
+        assert "Pipeline triggered successfully" in result
