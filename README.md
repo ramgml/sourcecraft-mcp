@@ -2,6 +2,8 @@
 
 MCP (Model Context Protocol) сервер для интеграции с платформой SourceCraft. Позволяет ИИ-агентам и IDE работать с репозиториями, issues, pull requests, CI/CD пайплайнами и релизами SourceCraft.
 
+Пакет также включает CLI утилиту `sourcecraft` для работы с SourceCraft из терминала (см. [CLI утилита](#cli-утилита)).
+
 ## Установка
 
 ### Через pip
@@ -302,6 +304,66 @@ CI/CD runs in 'myorg/backend-api':
    Created: 2024-01-15 09:45 UTC
 ```
 
+## CLI утилита
+
+Пакет включает CLI `sourcecraft` для работы с SourceCraft из терминала. Покрывает все домены API: репозитории, issues, pull requests, CI/CD, релизы, пользователи и организации.
+
+### Аутентификация
+
+```bash
+export SOURCECRAFT_API_TOKEN="your-api-token"
+# опционально
+export SOURCECRAFT_BASE_URL="https://api.sourcecraft.tech"
+```
+
+Токен также можно передать флагом `--token`.
+
+### Примеры команд
+
+```bash
+# Репозитории
+sourcecraft repo list --org myorg
+sourcecraft repo get myorg/backend-api
+sourcecraft repo create my-service --visibility private
+sourcecraft repo branches myorg/backend-api
+sourcecraft repo tree myorg/backend-api --recursive
+
+# Issues
+sourcecraft issue list myorg/backend-api --status open
+sourcecraft issue create myorg/backend-api --title "Bug" --body "Описание"
+sourcecraft issue close myorg/backend-api 42
+
+# Pull requests
+sourcecraft pr list myorg/backend-api --status open
+sourcecraft pr create myorg/backend-api --title "Fix" --source feature/x --target main --publish
+sourcecraft pr merge myorg/backend-api 45 --squash
+sourcecraft pr review myorg/backend-api 45 --decision approve
+
+# CI/CD
+sourcecraft ci runs myorg/backend-api
+sourcecraft ci run myorg/backend-api <run-slug>
+sourcecraft ci logs myorg/backend-api <run> <workflow> <task> <cube>
+sourcecraft ci trigger myorg/backend-api build --branch main
+
+# Релизы
+sourcecraft release list myorg/backend-api
+sourcecraft release create myorg/backend-api v1.0.0 --title "First release" --publish
+
+# Пользователи и организации
+sourcecraft user me
+sourcecraft user prs username --role reviewer
+sourcecraft org list
+sourcecraft org members myorg
+```
+
+### Формат вывода
+
+По умолчанию вывод — читаемые таблицы (Rich). Глобальный флаг `--json` переключает вывод в JSON для скриптов:
+
+```bash
+sourcecraft --json repo list --org myorg | jq '.repositories[].slug'
+```
+
 ## Разработка
 
 ### Установка зависимостей
@@ -329,6 +391,16 @@ uv run ruff format .
 src/sourcecraft_mcp/
 ├── __init__.py
 ├── server.py          # Точка входа MCP сервера
+├── cli/               # CLI утилита (команда `sourcecraft`)
+│   ├── app.py         # Точка входа CLI, глобальные опции
+│   ├── common.py      # Общие хелперы (клиент, вывод, ошибки)
+│   ├── repos.py
+│   ├── issues.py
+│   ├── prs.py
+│   ├── cicd.py
+│   ├── releases.py
+│   ├── users.py
+│   └── orgs.py
 ├── tools/             # Инструменты по доменам
 │   ├── repositories.py
 │   ├── issues.py

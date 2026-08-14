@@ -1,0 +1,1 @@
+"""SourceCraft CLI."""
