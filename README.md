@@ -412,6 +412,32 @@ src/sourcecraft_mcp/
 └── utils.py           # Утилиты
 ```
 
+## Agent Skill
+
+В каталоге `skill/` лежит opencode/claude-скилл `sourcecraft-cli` — инструкции для ИИ-агента по работе с CLI `sourcecraft`.
+
+### Установка скилла в систему
+
+```bash
+# opencode / claude (глобально)
+git clone ssh://ssh.sourcecraft.dev/ram56/sourcecraft-mcp.git
+cp -r sourcecraft-mcp/skill/sourcecraft-cli ~/.agents/skills/
+# или: cp -r ... ~/.claude/skills/  |  ~/.config/opencode/skills/
+
+# для конкретного проекта
+cp -r sourcecraft-mcp/skill/sourcecraft-cli /path/to/project/.opencode/skills/
+```
+
+Без клонирования, напрямую из репозитория:
+
+```bash
+mkdir -p ~/.agents/skills/sourcecraft-cli
+curl -sSL "https://git.sourcecraft.dev/ram56/sourcecraft-mcp/raw/branch/main/skill/sourcecraft-cli/SKILL.md" \
+  -o ~/.agents/skills/sourcecraft-cli/SKILL.md
+```
+
+После установки перезапустите opencode/claude, чтобы скилл подхватился.
+
 ## Лицензия
 
 MIT License
