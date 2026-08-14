@@ -432,7 +432,7 @@ cp -r sourcecraft-mcp/skill/sourcecraft-cli /path/to/project/.opencode/skills/
 
 ```bash
 mkdir -p ~/.agents/skills/sourcecraft-cli
-curl -sSL "https://git.sourcecraft.dev/ram56/sourcecraft-mcp/raw/branch/main/skill/sourcecraft-cli/SKILL.md" \
+curl -sSL "https://sourcecraft.dev/ram56/sourcecraft-mcp/raw/branch/main/skill/sourcecraft-cli/SKILL.md" \
   -o ~/.agents/skills/sourcecraft-cli/SKILL.md
 ```
 
