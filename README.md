@@ -55,7 +55,7 @@ uv pip install "git+https://github.com/ramgml/sourcecraft-mcp.git"
         "--with",
         "git+https://github.com/ramgml/sourcecraft-mcp.git",
         "--with",
-        "git+https://git.sourcecraft.dev/ram56/pysourcecraft.git@v0.1.0",
+        "git+https://github.com/ramgml/pysourcecraft.git@v0.1.5",
         "python",
         "-m",
         "sourcecraft_mcp.server"
