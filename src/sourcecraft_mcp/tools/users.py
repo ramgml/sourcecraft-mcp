@@ -111,7 +111,7 @@ async def list_my_issues(
             page_token=page_token or None,
         )
 
-        issues_data = result.issues if hasattr(result, "issues") else []
+        issues_data = result.data if hasattr(result, "data") else []
         if not issues_data:
             return "No issues found for you"
 
@@ -165,7 +165,7 @@ async def list_user_pull_requests(
             page_token=page_token or None,
         )
 
-        prs = result.pull_requests if hasattr(result, "pull_requests") else []
+        prs = result.data if hasattr(result, "data") else []
         if not prs:
             return f"No pull requests found for @{username}"
 

@@ -134,7 +134,7 @@ class TestListMyIssues:
         mock_issue2.priority = "normal"
 
         mock_result = MagicMock()
-        mock_result.issues = [mock_issue1, mock_issue2]
+        mock_result.data = [mock_issue1, mock_issue2]
 
         mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
 
@@ -149,7 +149,7 @@ class TestListMyIssues:
     async def test_list_my_issues_empty(self, mock_client, mock_context):
         """Test listing with no issues."""
         mock_result = MagicMock()
-        mock_result.issues = []
+        mock_result.data = []
 
         mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
 
@@ -172,7 +172,7 @@ class TestListMyIssues:
             mock_issues.append(mock_issue)
 
         mock_result = MagicMock()
-        mock_result.issues = mock_issues
+        mock_result.data = mock_issues
 
         mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
 
@@ -185,7 +185,7 @@ class TestListMyIssues:
     async def test_list_my_issues_with_pagination(self, mock_client, mock_context):
         """Test listing with pagination parameters."""
         mock_result = MagicMock()
-        mock_result.issues = []
+        mock_result.data = []
 
         mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
 
@@ -231,7 +231,7 @@ class TestListUserPullRequests:
         mock_pr2.status = "merged"
 
         mock_result = MagicMock()
-        mock_result.pull_requests = [mock_pr1, mock_pr2]
+        mock_result.data = [mock_pr1, mock_pr2]
 
         mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
 
@@ -250,7 +250,7 @@ class TestListUserPullRequests:
     async def test_list_user_prs_empty(self, mock_client, mock_context):
         """Test listing with no PRs."""
         mock_result = MagicMock()
-        mock_result.pull_requests = []
+        mock_result.data = []
 
         mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
 
@@ -277,7 +277,7 @@ class TestListUserPullRequests:
             mock_prs.append(mock_pr)
 
         mock_result = MagicMock()
-        mock_result.pull_requests = mock_prs
+        mock_result.data = mock_prs
 
         mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
 
@@ -300,7 +300,7 @@ class TestListUserPullRequests:
         mock_pr.status = "open"
 
         mock_result = MagicMock()
-        mock_result.pull_requests = [mock_pr]
+        mock_result.data = [mock_pr]
 
         mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
 
@@ -415,7 +415,7 @@ class TestRegisterTools:
 
         # Test _list_my_issues tool
         mock_result = MagicMock()
-        mock_result.issues = []
+        mock_result.data = []
 
         mock_client.users.list_my_issues = AsyncMock(return_value=mock_result)
 
@@ -446,7 +446,7 @@ class TestRegisterTools:
 
         # Test _list_user_pull_requests tool
         mock_result = MagicMock()
-        mock_result.pull_requests = []
+        mock_result.data = []
 
         mock_client.users.list_pull_requests = AsyncMock(return_value=mock_result)
 

@@ -277,6 +277,16 @@ async def merge_pull_request(
             request=request,
         )
 
+        # Merge answers 202 with an async operation payload, not the PR.
+        if isinstance(result, dict):
+            op = result.get("operation_id") or result.get("id") or ""
+            status = result.get("status") or ""
+            return (
+                f"Pull request #{pull_number} merge accepted"
+                + (f" (operation {op}" if op else " (")
+                + (f", status {status}" if status else "")
+                + (")" if op or status else ")")
+            )
         if result.merge_info and result.merge_info.merge_commit_hash:
             return (
                 f"Pull request #{pull_number} merged successfully!\n"

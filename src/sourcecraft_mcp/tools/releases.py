@@ -31,7 +31,7 @@ async def list_releases(
             page_token=page_token or None,
         )
 
-        releases_data = result.releases if hasattr(result, "releases") else []
+        releases_data = result.data if hasattr(result, "data") else []
         if not releases_data:
             return f"No releases found in '{owner}/{repo}'"
 

@@ -585,7 +585,7 @@ crypto = [
 [[package]]
 name = "pysourcecraft"
 version = "0.1.0"
-source = { git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git?rev=v0.1.0#e0d29457bc3394f1b9ec7ec987a398e7d9a51a18" }
+source = { git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git?rev=v0.1.3#9c79ff165dbd1a149ddc4ccef67b6e076adee120" }
 dependencies = [
     { name = "httpx", extra = ["socks"] },
     { name = "pydantic" },
@@ -865,7 +865,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "mcp", specifier = ">=1.26.0" },
-    { name = "pysourcecraft", git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git?rev=v0.1.0" },
+    { name = "pysourcecraft", git = "https://git.sourcecraft.dev/ram56/pysourcecraft.git?rev=v0.1.3" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.0.0" },
     { name = "rich", specifier = ">=13.0.0" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.6.0" },

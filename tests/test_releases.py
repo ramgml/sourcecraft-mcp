@@ -30,7 +30,7 @@ class TestListReleases:
         mock_release2.is_pre_release = True
 
         mock_result = MagicMock()
-        mock_result.releases = [mock_release1, mock_release2]
+        mock_result.data = [mock_release1, mock_release2]
         mock_result.next_page_token = None
 
         mock_client.releases.list = AsyncMock(return_value=mock_result)
@@ -52,7 +52,7 @@ class TestListReleases:
     async def test_list_releases_empty(self, mock_client, mock_context):
         """Test listing with no releases."""
         mock_result = MagicMock()
-        mock_result.releases = []
+        mock_result.data = []
 
         mock_client.releases.list = AsyncMock(return_value=mock_result)
 
@@ -75,7 +75,7 @@ class TestListReleases:
         mock_release.is_pre_release = False
 
         mock_result = MagicMock()
-        mock_result.releases = [mock_release]
+        mock_result.data = [mock_release]
         mock_result.next_page_token = "next_page"
 
         mock_client.releases.list = AsyncMock(return_value=mock_result)
@@ -515,7 +515,7 @@ class TestRegisterTools:
         mock_release.is_pre_release = False
 
         mock_result = MagicMock()
-        mock_result.releases = [mock_release]
+        mock_result.data = [mock_release]
         mock_result.next_page_token = None
 
         mock_client.releases.list = AsyncMock(return_value=mock_result)

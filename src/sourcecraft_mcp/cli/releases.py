@@ -28,7 +28,7 @@ def list_releases(
         )
 
     def render(result):
-        releases = getattr(result, "releases", None) or []
+        releases = getattr(result, "data", None) or []
         render_table(
             f"Releases in {repo}",
             ["Tag", "Title", "Status", "Latest", "Pre-release"],

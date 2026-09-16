@@ -189,6 +189,14 @@ def merge_pr(
         )
 
     def render(p):
+        # The merge endpoint answers 202 with an async operation payload
+        # (operation id / status), not the merged PR.
+        if isinstance(p, dict):
+            op = p.get("operation_id") or p.get("id") or ""
+            status = p.get("status") or ""
+            suffix = f" (operation {op}, status {status})" if op else ""
+            print(f"PR #{number} merge accepted{suffix}")
+            return
         commit = (
             p.merge_info.merge_commit_hash[:7]
             if p.merge_info and p.merge_info.merge_commit_hash

@@ -68,7 +68,7 @@ def my_issues(
         return await client.users.list_my_issues(page_size=page_size, page_token=page_token or None)
 
     def render(result):
-        issues = getattr(result, "issues", None) or []
+        issues = getattr(result, "data", None) or []
         render_table(
             "My issues",
             ["#", "Title", "Status", "Priority"],
@@ -102,7 +102,7 @@ def user_prs(
         )
 
     def render(result):
-        prs = getattr(result, "pull_requests", None) or []
+        prs = getattr(result, "data", None) or []
         render_table(
             f"PRs of @{username}",
             ["#", "Title", "Status", "Branch"],

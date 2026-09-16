@@ -312,7 +312,7 @@ class TestReleaseCommands:
             is_pre_release=False,
         )
         mock_client.releases.list = AsyncMock(
-            return_value=MagicMock(releases=[release], next_page_token=None)
+            return_value=MagicMock(data=[release], next_page_token=None)
         )
 
         result = runner.invoke(app, ["release", "list", "org/repo"])
