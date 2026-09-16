@@ -21,7 +21,7 @@ uv pip install sourcecraft-mcp
 ### Из исходников
 
 ```bash
-git clone https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git
+git clone https://github.com/ramgml/sourcecraft-mcp.git
 cd sourcecraft-mcp
 uv pip install -e .
 ```
@@ -34,13 +34,13 @@ uv pip install -e .
 
 ```toml
 [tool.uv.sources]
-sourcecraft-mcp = { git = "https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git" }
+sourcecraft-mcp = { git = "https://github.com/ramgml/sourcecraft-mcp.git" }
 ```
 
 Или установите напрямую:
 
 ```bash
-uv pip install "git+https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git"
+uv pip install "git+https://github.com/ramgml/sourcecraft-mcp.git"
 ```
 
 #### 2. Настройка MCP с использованием uv и git зависимостей
@@ -53,7 +53,7 @@ uv pip install "git+https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git"
       "args": [
         "run",
         "--with",
-        "git+https://git.sourcecraft.dev/your-org/sourcecraft-mcp.git",
+        "git+https://github.com/ramgml/sourcecraft-mcp.git",
         "--with",
         "git+https://git.sourcecraft.dev/ram56/pysourcecraft.git@v0.1.0",
         "python",
@@ -420,7 +420,7 @@ src/sourcecraft_mcp/
 
 ```bash
 # opencode / claude (глобально)
-git clone ssh://ssh.sourcecraft.dev/ram56/sourcecraft-mcp.git
+git clone https://github.com/ramgml/sourcecraft-mcp.git
 cp -r sourcecraft-mcp/skill/sourcecraft-cli ~/.agents/skills/
 # или: cp -r ... ~/.claude/skills/  |  ~/.config/opencode/skills/
 
@@ -432,7 +432,7 @@ cp -r sourcecraft-mcp/skill/sourcecraft-cli /path/to/project/.opencode/skills/
 
 ```bash
 mkdir -p ~/.agents/skills/sourcecraft-cli
-curl -sSL "https://sourcecraft.dev/ram56/sourcecraft-mcp/raw/branch/main/skill/sourcecraft-cli/SKILL.md" \
+curl -sSL "https://raw.githubusercontent.com/ramgml/sourcecraft-mcp/main/skill/sourcecraft-cli/SKILL.md" \
   -o ~/.agents/skills/sourcecraft-cli/SKILL.md
 ```
 
