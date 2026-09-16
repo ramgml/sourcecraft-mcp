@@ -2,6 +2,7 @@
 name = "sourcecraft-mcp"
 version = "0.1.0"
 description = "MCP сервер для анализа и навигации по исходному коду"
+license = { text = "MIT" }
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
