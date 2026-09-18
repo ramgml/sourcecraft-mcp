@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from mcp.server.fastmcp import Context
+from pysourcecraft.models import GitRevision, RunWorkflowsRequest, WorkflowData
 
 
 async def list_ci_runs(
@@ -317,21 +318,23 @@ async def trigger_workflows(
     client = ctx.request_context.lifespan_context.client
 
     try:
-        # Determine the ref (branch, tag, or commit)
-        ref = branch or tag or commit or "main"
+        head = GitRevision()
+        if branch:
+            head = GitRevision(branch=branch)
+        elif tag:
+            head = GitRevision(tag=tag)
+        elif commit:
+            head = GitRevision(commit=commit)
 
-        variables = {"workflows": workflows} if workflows else None
-
-        result = await client.cicd.create_pipeline(
-            owner=owner,
-            repo=repo,
-            ref=ref,
-            variables=variables,
+        request = RunWorkflowsRequest(
+            head=head,
+            workflows=[WorkflowData(name=name) for name in workflows],
         )
+        result = await client.cicd.run_workflows(owner=owner, repo=repo, request=request)
 
         lines = [
-            "Pipeline triggered successfully!",
-            f"Pipeline ID: {result.id}",
+            "Run triggered successfully!",
+            f"Run slug: {result.slug}",
             f"Status: {result.status}",
         ]
 

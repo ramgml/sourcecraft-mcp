@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pysourcecraft.models import GitRevision, WorkflowData
 from typer.testing import CliRunner
 
 from sourcecraft_mcp.cli import common
@@ -290,14 +291,16 @@ class TestCICommands:
         assert "line1" in result.output
 
     def test_trigger(self, mock_client):
-        mock_client.cicd.create_pipeline = AsyncMock(
-            return_value=MagicMock(id="p1", status="created")
+        mock_client.cicd.run_workflows = AsyncMock(
+            return_value=MagicMock(slug="7", status="created")
         )
         result = runner.invoke(app, ["ci", "trigger", "org/repo", "build", "--branch", "dev"])
         assert result.exit_code == 0
-        kwargs = mock_client.cicd.create_pipeline.await_args.kwargs
-        assert kwargs["ref"] == "dev"
-        assert kwargs["variables"] == {"workflows": ["build"]}
+        kwargs = mock_client.cicd.run_workflows.await_args.kwargs
+        assert kwargs["owner"] == "org"
+        assert kwargs["repo"] == "repo"
+        assert kwargs["request"].head == GitRevision(branch="dev")
+        assert kwargs["request"].workflows == [WorkflowData(name="build")]
 
 
 class TestReleaseCommands:

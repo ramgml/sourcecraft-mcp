@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from pysourcecraft.models import GitRevision, WorkflowData
 
 from sourcecraft_mcp.tools import cicd
 
@@ -507,10 +508,10 @@ class TestTriggerWorkflows:
     async def test_trigger_workflows_with_branch(self, mock_client, mock_context):
         """Test triggering workflows with branch."""
         mock_result = MagicMock()
-        mock_result.id = "pipeline-123"
+        mock_result.slug = "12"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         result = await cicd.trigger_workflows(
             owner="test",
@@ -520,24 +521,28 @@ class TestTriggerWorkflows:
             ctx=mock_context,
         )
 
-        mock_client.cicd.create_pipeline.assert_called_once_with(
-            owner="test",
-            repo="test-repo",
-            ref="main",
-            variables={"workflows": ["build", "test"]},
-        )
-        assert "Pipeline triggered successfully" in result
-        assert "pipeline-123" in result
+        mock_client.cicd.run_workflows.assert_called_once()
+        kwargs = mock_client.cicd.run_workflows.call_args.kwargs
+        assert kwargs["owner"] == "test"
+        assert kwargs["repo"] == "test-repo"
+        body = kwargs["request"]
+        assert body.head == GitRevision(branch="main")
+        assert body.workflows == [
+            WorkflowData(name="build"),
+            WorkflowData(name="test"),
+        ]
+        assert "Run triggered successfully" in result
+        assert "12" in result
         assert "created" in result
 
     @pytest.mark.asyncio
     async def test_trigger_workflows_with_tag(self, mock_client, mock_context):
         """Test triggering workflows with tag."""
         mock_result = MagicMock()
-        mock_result.id = "pipeline-456"
+        mock_result.slug = "13"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         await cicd.trigger_workflows(
             owner="test",
@@ -547,21 +552,17 @@ class TestTriggerWorkflows:
             ctx=mock_context,
         )
 
-        mock_client.cicd.create_pipeline.assert_called_once_with(
-            owner="test",
-            repo="test-repo",
-            ref="v1.0.0",
-            variables={"workflows": ["deploy"]},
-        )
+        body = mock_client.cicd.run_workflows.call_args.kwargs["request"]
+        assert body.head == GitRevision(tag="v1.0.0")
 
     @pytest.mark.asyncio
     async def test_trigger_workflows_with_commit(self, mock_client, mock_context):
         """Test triggering workflows with commit."""
         mock_result = MagicMock()
-        mock_result.id = "pipeline-789"
+        mock_result.slug = "14"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         await cicd.trigger_workflows(
             owner="test",
@@ -571,21 +572,17 @@ class TestTriggerWorkflows:
             ctx=mock_context,
         )
 
-        mock_client.cicd.create_pipeline.assert_called_once_with(
-            owner="test",
-            repo="test-repo",
-            ref="abc123",
-            variables={"workflows": ["test"]},
-        )
+        body = mock_client.cicd.run_workflows.call_args.kwargs["request"]
+        assert body.head == GitRevision(commit="abc123")
 
     @pytest.mark.asyncio
-    async def test_trigger_workflows_defaults_to_main(self, mock_client, mock_context):
-        """Test that workflows default to main branch."""
+    async def test_trigger_workflows_defaults_to_empty_head(self, mock_client, mock_context):
+        """Test that no ref means the server default branch (empty head)."""
         mock_result = MagicMock()
-        mock_result.id = "pipeline-000"
+        mock_result.slug = "15"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         await cicd.trigger_workflows(
             owner="test",
@@ -594,21 +591,17 @@ class TestTriggerWorkflows:
             ctx=mock_context,
         )
 
-        mock_client.cicd.create_pipeline.assert_called_once_with(
-            owner="test",
-            repo="test-repo",
-            ref="main",
-            variables={"workflows": ["build"]},
-        )
+        body = mock_client.cicd.run_workflows.call_args.kwargs["request"]
+        assert body.head == GitRevision()
 
     @pytest.mark.asyncio
     async def test_trigger_workflows_empty_workflows(self, mock_client, mock_context):
         """Test triggering workflows with empty list."""
         mock_result = MagicMock()
-        mock_result.id = "pipeline-111"
+        mock_result.slug = "16"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         await cicd.trigger_workflows(
             owner="test",
@@ -618,17 +611,13 @@ class TestTriggerWorkflows:
             ctx=mock_context,
         )
 
-        mock_client.cicd.create_pipeline.assert_called_once_with(
-            owner="test",
-            repo="test-repo",
-            ref="main",
-            variables=None,
-        )
+        body = mock_client.cicd.run_workflows.call_args.kwargs["request"]
+        assert body.workflows == []
 
     @pytest.mark.asyncio
     async def test_trigger_workflows_error(self, mock_client, mock_context):
         """Test error handling."""
-        mock_client.cicd.create_pipeline = AsyncMock(side_effect=Exception("API Error"))
+        mock_client.cicd.run_workflows = AsyncMock(side_effect=Exception("API Error"))
 
         result = await cicd.trigger_workflows(
             owner="test",
@@ -885,12 +874,12 @@ class TestRegisterTools:
         assert trigger_func is not None
 
         mock_result = MagicMock()
-        mock_result.id = "pipe-123"
+        mock_result.slug = "12"
         mock_result.status = "created"
 
-        mock_client.cicd.create_pipeline = AsyncMock(return_value=mock_result)
+        mock_client.cicd.run_workflows = AsyncMock(return_value=mock_result)
 
         result = await trigger_func(
             "test", "test-repo", ["build"], branch="main", tag="", commit="", ctx=mock_context
         )
-        assert "Pipeline triggered successfully" in result
+        assert "Run triggered successfully" in result

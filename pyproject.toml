@@ -26,7 +26,7 @@ build-backend = "hatchling.build"
 packages = ["src/sourcecraft_mcp"]
 
 [tool.uv.sources]
-pysourcecraft = { git = "https://github.com/ramgml/pysourcecraft.git", rev = "v0.1.5" }
+pysourcecraft = { git = "https://github.com/ramgml/pysourcecraft.git", rev = "v0.1.6" }
 
 [dependency-groups]
 dev = [

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import typer
+from pysourcecraft.models import GitRevision, RunWorkflowsRequest, WorkflowData
 
 from sourcecraft_mcp.cli.common import RepoArg, render_fields, render_table, run_command, split_repo
 
@@ -208,13 +209,22 @@ def trigger(
     owner, name = split_repo(repo)
 
     async def handler(client):
-        ref = branch or tag or commit or "main"
-        variables = {"workflows": workflows} if workflows else None
-        return await client.cicd.create_pipeline(
-            owner=owner, repo=name, ref=ref, variables=variables
+        head = GitRevision()
+        if branch:
+            head = GitRevision(branch=branch)
+        elif tag:
+            head = GitRevision(tag=tag)
+        elif commit:
+            head = GitRevision(commit=commit)
+        request = RunWorkflowsRequest(
+            head=head, workflows=[WorkflowData(name=w) for w in workflows]
         )
+        return await client.cicd.run_workflows(owner=owner, repo=name, request=request)
 
-    def render(p):
-        render_fields("Pipeline triggered", [("ID", p.id), ("Status", p.status)])
+    def render(r):
+        render_fields(
+            "Run triggered",
+            [("Slug", r.slug), ("Status", r.status)],
+        )
 
     run_command(ctx, handler, render)
